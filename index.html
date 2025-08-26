@@ -1,134 +1,214 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <title>10분 자유토론(Firebase)</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
-    #video { width: 400px; height: 300px; background: #222; margin-top: 16px; }
-    .flipped { transform: scaleX(-1); }
-    #chat { width: 400px; height: 120px; border: 1px solid #bbb; overflow-y: auto; margin: 0 auto 8px; }
-    #input { width: 300px; }
-    #timer { font-weight: bold; margin: 16px; }
-    #startBtn[disabled] { background: #ccc; }
-  </style>
+<meta charset="UTF-8" />
+<title>WebRTC + Firebase 영상 통화 + 채팅</title>
+<style>
+  #localVideo, #remoteVideo {
+    width: 45%; height: 240px; background: #222;
+  }
+  #videos { display: flex; justify-content: space-around; margin-bottom: 10px; }
+  #chat { width: 90%; height: 150px; border: 1px solid #ccc; overflow-y: auto; margin: 0 auto 10px; padding: 5px; }
+  #input, #sendBtn { font-size: 1rem; }
+  #input { width: 80%; }
+</style>
 </head>
 <body>
-  <h2>10분 자유토론(Firebase)</h2>
-  <input type="text" id="name" placeholder="이름 입력" />
-  <button id="startBtn">토론 시작</button>
-  <div id="timer">남은 시간: 10:00</div>
-  <video id="video" autoplay muted></video><br>
-  <button id="flipBtn">반전</button>
-  <div id="chat"></div>
-  <input id="input" placeholder="채팅 메세지">
-  <button id="sendBtn">전송</button>
+<h2>WebRTC + Firebase 영상 통화 + 채팅</h2>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      onValue,
-      push,
-      child,
-      onChildAdded
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+<input id="roomInput" placeholder="룸 아이디 입력 (예: room1)" />
+<button id="joinBtn">방 입장</button>
+<br /><br />
 
-    // ✅ Firebase 설정
-    const firebaseConfig = {
-      apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
-      authDomain: "amazi-6de63.firebaseapp.com",
-      databaseURL: "https://amazi-6de63-default-rtdb.firebaseio.com",
-      projectId: "amazi-6de63",
-      storageBucket: "amazi-6de63.appspot.com",
-      messagingSenderId: "274825287462",
-      appId: "1:274825287462:web:1b1de31d93d7a3e83693e7",
-      measurementId: "G-DT4JLH8QEC"
-    };
+<div id="videos">
+  <video id="localVideo" autoplay muted playsinline></video>
+  <video id="remoteVideo" autoplay playsinline></video>
+</div>
 
-    // ✅ Firebase 초기화
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+<div id="chat"></div>
+<input id="input" placeholder="메시지 입력" />
+<button id="sendBtn">전송</button>
 
-    const roomRef = ref(db, "room");
-    const chatRef = ref(db, "chat");
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  get,
+  push,
+  onChildAdded,
+  onValue,
+  remove,
+  update,
+  child
+} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-    const startBtn = document.getElementById('startBtn');
-    const video = document.getElementById('video');
-    const flipBtn = document.getElementById('flipBtn');
-    const timerDiv = document.getElementById('timer');
-    const nameInput = document.getElementById('name');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
-    const chatDiv = document.getElementById('chat');
+const firebaseConfig = {
+  apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
+  authDomain: "amazi-6de63.firebaseapp.com",
+  databaseURL: "https://amazi-6de63-default-rtdb.firebaseio.com",
+  projectId: "amazi-6de63",
+  storageBucket: "amazi-6de63.appspot.com",
+  messagingSenderId: "274825287462",
+  appId: "1:274825287462:web:1b1de31d93d7a3e83693e7",
+  measurementId: "G-DT4JLH8QEC"
+};
 
-    let time = 600, timer, joined = false, stream;
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
-    // ✅ 토론 상태 실시간 확인
-    onValue(child(roomRef, "status"), (snapshot) => {
-      const status = snapshot.val();
-      if (status === "busy") startBtn.disabled = true;
-      else startBtn.disabled = false;
-    });
+const localVideo = document.getElementById('localVideo');
+const remoteVideo = document.getElementById('remoteVideo');
+const roomInput = document.getElementById('roomInput');
+const joinBtn = document.getElementById('joinBtn');
+const chatDiv = document.getElementById('chat');
+const input = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
 
-    // ✅ 토론 시작 버튼
-    startBtn.onclick = async () => {
-      const name = nameInput.value.trim();
-      if (!name) {
-        alert("이름을 입력하세요!");
-        return;
-      }
+let localStream = null;
+let peerConnection = null;
+let roomRef = null;
+let chatRef = null;
+let roomId = null;
+let isCaller = false;
 
-      await set(child(roomRef, "status"), "busy");
-      joined = true;
-      startBtn.disabled = true;
+const servers = {
+  iceServers: [
+    { urls: "stun:stun.l.google.com:19302" }
+  ]
+};
 
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      video.srcObject = stream;
+async function startLocalStream() {
+  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  localVideo.srcObject = localStream;
+}
 
-      video.style.display = '';
-      time = 600;
-      timerDiv.textContent = `남은 시간: 10:00`;
+async function joinRoom(room) {
+  roomId = room;
+  roomRef = ref(db, 'rooms/' + roomId);
+  chatRef = ref(db, 'chats/' + roomId);
 
-      timer = setInterval(async () => {
-        time--;
-        const mm = String(Math.floor(time / 60)).padStart(2, '0');
-        const ss = String(time % 60).padStart(2, '0');
-        timerDiv.textContent = `남은 시간: ${mm}:${ss}`;
+  // 방 정보 읽어오기
+  const roomSnapshot = await get(roomRef);
 
-        if (time <= 0) {
-          clearInterval(timer);
-          stream.getTracks().forEach(track => track.stop());
-          await set(child(roomRef, "status"), "ready");
-          joined = false;
-          startBtn.disabled = false;
-          timerDiv.textContent = "종료!";
-        }
-      }, 1000);
-    };
+  if (!roomSnapshot.exists()) {
+    // 방 생성 및 offer 준비
+    isCaller = true;
 
-    // ✅ 카메라 반전
-    flipBtn.onclick = () => video.classList.toggle('flipped');
+    // Create peer connection
+    peerConnection = new RTCPeerConnection(servers);
 
-    // ✅ 채팅 전송
-    sendBtn.onclick = () => {
-      const name = nameInput.value.trim();
-      const msg = input.value.trim();
+    registerPeerConnectionListeners();
 
-      if (name && msg) {
-        push(chatRef, { name, msg });
-        input.value = '';
+    // 로컬 스트림을 peerConnection에 추가
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    // ICE candidate가 생길 때 Firebase에 저장
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        push(child(roomRef, 'callerCandidates'), event.candidate.toJSON());
       }
     };
 
-    // ✅ 채팅 실시간 수신
-    onChildAdded(chatRef, (snapshot) => {
-      const { name, msg } = snapshot.val();
-      chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
-      chatDiv.scrollTop = chatDiv.scrollHeight;
+    // 상대방 트랙 수신 시 remoteVideo에 연결
+    peerConnection.ontrack = event => {
+      remoteVideo.srcObject = event.streams[0];
+    };
+
+    // offer 생성
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+
+    // offer를 Firebase에 저장
+    await set(roomRef, { 'offer': { type: offer.type, sdp: offer.sdp } });
+
+    // 상대방의 answer를 기다림
+    onValue(child(roomRef, 'answer'), async snapshot => {
+      const answer = snapshot.val();
+      if (!peerConnection.currentRemoteDescription && answer) {
+        const rtcAnswer = new RTCSessionDescription(answer);
+        await peerConnection.setRemoteDescription(rtcAnswer);
+      }
     });
-  </script>
+
+    // 상대방 ICE candidate 수신
+    onChildAdded(child(roomRef, 'calleeCandidates'), snapshot => {
+      const candidate = new RTCIceCandidate(snapshot.val());
+      peerConnection.addIceCandidate(candidate);
+    });
+
+  } else {
+    // 이미 방이 존재 -> answerer 역할
+    isCaller = false;
+
+    peerConnection = new RTCPeerConnection(servers);
+    registerPeerConnectionListeners();
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        push(child(roomRef, 'calleeCandidates'), event.candidate.toJSON());
+      }
+    };
+
+    peerConnection.ontrack = event => {
+      remoteVideo.srcObject = event.streams[0];
+    };
+
+    // 방에서 offer 읽기
+    const offer = roomSnapshot.val().offer;
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+    // answer 생성
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    // Firebase에 answer 저장
+    await update(roomRef, { answer: { type: answer.type, sdp: answer.sdp } });
+
+    // callerCandidates 수신
+    onChildAdded(child(roomRef, 'callerCandidates'), snapshot => {
+      const candidate = new RTCIceCandidate(snapshot.val());
+      peerConnection.addIceCandidate(candidate);
+    });
+  }
+
+  // 채팅 수신 처리
+  onChildAdded(chatRef, snapshot => {
+    const { name, msg } = snapshot.val();
+    chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  });
+}
+
+function registerPeerConnectionListeners() {
+  peerConnection.onconnectionstatechange = () => {
+    console.log('Connection state change:', peerConnection.connectionState);
+  };
+}
+
+joinBtn.onclick = async () => {
+  if (!roomInput.value.trim()) {
+    alert("룸 아이디를 입력하세요.");
+    return;
+  }
+  await startLocalStream();
+  await joinRoom(roomInput.value.trim());
+  joinBtn.disabled = true;
+  roomInput.disabled = true;
+};
+
+// 채팅 보내기
+sendBtn.onclick = () => {
+  const name = prompt("이름을 입력하세요") || "익명";
+  const msg = input.value.trim();
+  if (msg) {
+    push(chatRef, { name, msg });
+    input.value = '';
+  }
+};
+</script>
 </body>
 </html>
