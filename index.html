@@ -2,24 +2,60 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>✨ Realtime Chat App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unvul Chat !!</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
 
   <style>
     /* 🔥 전체 배경 */
-    body {
-      font-family: 'Segoe UI', sans-serif;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      --primary-bg: #0a0e1a;
+      --secondary-bg: #1a1f3a;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --accent-primary: #6366f1;
+      --accent-secondary: #8b5cf6;
+      --accent-gradient: linear-gradient(135deg, #6366f1, #8b5cf6);
+      --text-primary: #ffffff;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+      --blur: 20px;
+    }
+
+    * {
       margin: 0;
       padding: 0;
-      background: linear-gradient(135deg, #7f00ff, #e100ff);
-      color: #fff;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--primary-bg);
+      background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%);
+      color: var(--text-primary);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    body.fullscreen {
+      padding: 10px;
     }
 
     h2 {
@@ -28,7 +64,7 @@
       text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
     }
 
-    input, button {
+    input, button, select {
       padding: 10px 15px;
       margin: 5px 0;
       border: none;
@@ -36,14 +72,25 @@
       font-size: 1em;
     }
 
-    input[type="text"] {
+    input[type="text"], input[type="password"] {
       width: 250px;
       background-color: rgba(255,255,255,0.1);
       color: white;
       border: 1px solid rgba(255,255,255,0.3);
     }
 
-    input[type="file"] {
+    input[type="text"]::placeholder, input[type="password"]::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    select {
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    select option {
+      background-color: #333;
       color: white;
     }
 
@@ -59,6 +106,14 @@
       transform: scale(1.05);
     }
 
+    .danger-btn {
+      background: linear-gradient(to right, #ff4757, #ff3838);
+    }
+
+    .success-btn {
+      background: linear-gradient(to right, #2ed573, #1e90ff);
+    }
+
     #roomSection, #chatSection {
       width: 100%;
       max-width: 600px;
@@ -70,6 +125,18 @@
       animation: fadeIn 0.6s ease-out;
     }
 
+    #chatSection.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      max-width: none;
+      margin: 0;
+      border-radius: 0;
+      z-index: 999;
+    }
+
     #chat {
       border: 1px solid rgba(255,255,255,0.2);
       padding: 15px;
@@ -78,6 +145,10 @@
       background-color: rgba(255,255,255,0.1);
       border-radius: 10px;
       margin-top: 10px;
+    }
+
+    #chatSection.fullscreen #chat {
+      height: calc(100vh - 200px);
     }
 
     .message {
@@ -99,6 +170,17 @@
       box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     }
 
+    .quiz-message {
+      background-color: rgba(255, 165, 0, 0.3);
+      border-left: 4px solid #ffa500;
+    }
+
+    .participation-message {
+      background-color: rgba(0, 255, 0, 0.2);
+      font-style: italic;
+      text-align: center;
+    }
+
     ul {
       list-style: none;
       padding-left: 0;
@@ -111,10 +193,242 @@
       margin-bottom: 5px;
       cursor: pointer;
       transition: background 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     li:hover {
       background-color: rgba(255,255,255,0.25);
+    }
+
+    .lock-icon {
+      color: #ffd700;
+    }
+
+    /* 모달 기본 스타일 */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+      overflow-y: auto;
+    }
+
+    .modal-content {
+      background-color: #1a1313;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 800px;
+      color: #aaaaaa;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    /* 모바일에서 그림판 고정 */
+    @media (max-width: 768px) {
+      .modal {
+        position: fixed;
+        overflow: hidden;
+      }
+      
+      .modal-content {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        max-width: none;
+        max-height: none;
+        margin: 0;
+        border-radius: 0;
+        overflow-y: auto;
+      }
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: #000;
+    }
+
+    #drawingCanvas {
+      border: 2px solid #333;
+      background: white;
+      cursor: crosshair;
+      display: block;
+      margin: 10px 0;
+      max-width: 100%;
+    }
+
+    .drawing-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin: 10px 0;
+    }
+
+    .color-palette {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .color-btn {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #333;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .color-btn:hover, .color-btn.active {
+      transform: scale(1.2);
+      border-color: #000;
+    }
+
+    .tool-btn {
+      padding: 5px 10px;
+      margin: 0 2px;
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #333;
+    }
+
+    .tool-btn.active {
+      background: #007bff;
+      color: white;
+    }
+
+    .password-modal {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.8);
+    }
+
+    .password-modal-content {
+      background-color: rgba(0,0,0,0.8);
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 15px;
+      width: 300px;
+      text-align: center;
+    }
+
+    /* 카메라 스타일 */
+    #cameraModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+    }
+
+    #cameraModal .modal-content {
+      background-color: #000;
+      color: white;
+      text-align: center;
+    }
+
+    #videoElement {
+      max-width: 100%;
+      max-height: 60vh;
+      border-radius: 10px;
+    }
+
+    #captureButton {
+      margin: 10px;
+      padding: 15px 30px;
+      font-size: 1.2em;
+    }
+
+    /* 퀴즈 스타일 */
+    .quiz-container {
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 10px 0;
+      color: #333333;
+    }
+
+    .quiz-options {
+      margin: 15px 0;
+    }
+
+    .quiz-option {
+      display: block;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .quiz-option:hover {
+      background-color: #dee2e6;
+    }
+
+    .quiz-option.selected {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .quiz-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      color: #333;
+    }
+
+    .quiz-create {
+      background-color: #2c2323;
+      padding: 20px;
+      border-radius: 10px;
+      color: #ffffff;
+    }
+
+    .question-input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      color: #333;
+    }
+
+    .option-input {
+      width: 80%;
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      color: #333;
     }
 
     @keyframes fadeIn {
@@ -128,7 +442,7 @@
     }
 
     @media (max-width: 600px) {
-      input[type="text"], button {
+      input[type="text"], input[type="password"], button, select {
         width: 100%;
         box-sizing: border-box;
       }
@@ -137,7 +451,7 @@
 </head>
 <body>
 
-  <h2>💬 Realtime Chat</h2>
+  <h2>💬 Unvul Chat !!</h2>
 
   <!-- 사용자 이름 -->
   <div id="nameSection">
@@ -148,19 +462,133 @@
   <!-- 방 만들기 및 목록 -->
   <div id="roomSection" style="display:none;">
     <input type="text" id="roomName" placeholder="방 이름 입력">
+    <input type="password" id="roomPassword" placeholder="비밀번호 (선택사항)">
     <button onclick="createRoom()">방 만들기</button>
-    <h3>📃 방 목록</h3>
+    <h3>  ※방 목록  </h3>
     <ul id="roomList"></ul>
   </div>
 
   <!-- 채팅 화면 -->
   <div id="chatSection" style="display:none;">
-    <h3 id="currentRoomTitle"></h3>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h3 id="currentRoomTitle"></h3>
+      <button onclick="toggleFullscreen()" id="fullscreenBtn">🔍 확대</button>
+    </div>
     <div id="chat"></div>
     <input type="text" id="messageInput" placeholder="메시지 입력">
-    <input type="file" id="imageInput" accept="image/*">
-    <button onclick="sendMessage()">보내기</button>
-    <button onclick="exitRoom()">나가기</button>
+    <button onclick="openCamera()">*사진촬영*</button>
+    <button onclick="openDrawingBoard()">🎨 그림판</button>
+    <button onclick="openQuizModal()">-퀴즈 출제-</button>
+    <button onclick="exitRoom()" class="danger-btn">나가기</button>
+    <div id="quizResultButtons"></div>
+  </div>
+
+  <!-- 비밀번호 입력 모달 -->
+  <div id="passwordModal" class="password-modal">
+    <div class="password-modal-content">
+      <h3>🔒 방 입장</h3>
+      <p>이 방은 비밀번호가 필요합니다.</p>
+      <input type="password" id="roomPasswordInput" placeholder="비밀번호 입력">
+      <button onclick="checkPassword()">입장하기</button>
+      <button onclick="closePasswordModal()">취소</button>
+    </div>
+  </div>
+
+  <!-- 카메라 모달 -->
+  <div id="cameraModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeCamera()">&times;</span>
+      <h3>사진 촬영</h3>
+      <video id="videoElement" autoplay></video>
+      <canvas id="photoCanvas" style="display:none;"></canvas>
+      <div>
+        <button id="captureButton" onclick="capturePhoto()">📸 촬영</button>
+        <button onclick="closeCamera()">취소</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 그림판 모달 -->
+  <div id="drawingModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeDrawingBoard()">&times;</span>
+      <h3>🎨 공유 그림판</h3>
+      
+      <div class="drawing-controls">
+        <div class="color-palette">
+          <div class="color-btn active" style="background-color: #000000" onclick="selectColor('#000000')"></div>
+          <div class="color-btn" style="background-color: #ff0000" onclick="selectColor('#ff0000')"></div>
+          <div class="color-btn" style="background-color: #00ff00" onclick="selectColor('#00ff00')"></div>
+          <div class="color-btn" style="background-color: #0000ff" onclick="selectColor('#0000ff')"></div>
+          <div class="color-btn" style="background-color: #ffff00" onclick="selectColor('#ffff00')"></div>
+          <div class="color-btn" style="background-color: #ff00ff" onclick="selectColor('#ff00ff')"></div>
+          <div class="color-btn" style="background-color: #00ffff" onclick="selectColor('#00ffff')"></div>
+          <div class="color-btn" style="background-color: #ffa500" onclick="selectColor('#ffa500')"></div>
+        </div>
+        
+        <button class="tool-btn active" id="penTool" onclick="selectTool('pen')">✏️ 펜</button>
+        <button class="tool-btn" id="eraserTool" onclick="selectTool('eraser')">🧹 지우개</button>
+        <button class="tool-btn" onclick="clearCanvas()">🗑️ 전체 지우기</button>
+        <button class="tool-btn" onclick="saveDrawing()">그림 저장&보내기</button>
+      </div>
+
+      <canvas id="drawingCanvas" width="750" height="400"></canvas>
+    </div>
+  </div>
+
+  <!-- 퀴즈 출제 모달 -->
+  <div id="quizModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeQuizModal()">&times;</span>
+      <h3>퀴즈 출제</h3>
+      <div class="quiz-create">
+        <select id="quizType" onchange="toggleQuizType()">
+          <option value="multiple">객관식</option>
+          <option value="short">주관식</option>
+        </select>
+        
+        <input type="text" id="quizQuestion" class="question-input" placeholder="문제를 입력하세요">
+        
+        <div id="multipleOptions">
+          <h4>선택지 (최소 2개)</h4>
+          <input type="text" class="option-input" placeholder="선택지 1">
+          <input type="text" class="option-input" placeholder="선택지 2">
+          <input type="text" class="option-input" placeholder="선택지 3">
+          <input type="text" class="option-input" placeholder="선택지 4">
+          <input type="text" class="option-input" placeholder="선택지 5">
+          <button onclick="addOption()">+ 선택지 추가</button>
+          <br><br>
+          <label>정답 번호: </label>
+          <select id="correctAnswer">
+            <option value="1">1번</option>
+            <option value="2">2번</option>
+            <option value="3">3번</option>
+            <option value="4">4번</option>
+            <option value="5">5번</option>
+          </select>
+        </div>
+        
+        <div id="shortAnswer" style="display:none;">
+          <h4>정답</h4>
+          <input type="text" id="shortAnswerCorrect" class="question-input" placeholder="정답을 입력하세요">
+        </div>
+        
+        <br>
+        <button onclick="submitQuiz()" class="success-btn">퀴즈 출제</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 퀴즈 참여 모달 -->
+  <div id="quizParticipateModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeQuizParticipate()">&times;</span>
+      <h3>퀴즈 풀기</h3>
+      <div id="quizContent" class="quiz-container">
+        <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
+      </div>
+      <button onclick="submitQuizAnswer()" class="success-btn">답안 제출</button>
+    </div>
   </div>
 
   <script>
@@ -181,6 +609,19 @@
 
     let currentRoom = null;
     let username = null;
+    let selectedRoomForPassword = null;
+    let isFullscreen = false;
+
+    // 그림판 변수들
+    let canvas, ctx;
+    let isDrawing = false;
+    let currentColor = '#000000';
+    let currentTool = 'pen';
+
+    // 퀴즈 변수들 - 수정된 부분
+    let currentQuiz = null;
+    let currentQuizId = null;
+    let myActiveQuizzes = new Set(); // 내가 출제한 활성 퀴즈들 관리
 
     function setUsername() {
       const nameInput = document.getElementById("username").value.trim();
@@ -192,59 +633,180 @@
 
     function createRoom() {
       const roomName = document.getElementById("roomName").value.trim();
+      const roomPassword = document.getElementById("roomPassword").value.trim();
+      
       if (!roomName) return alert("방 이름을 입력해주세요.");
-      db.ref("rooms/" + roomName).set({ createdAt: Date.now() });
+      
+      const roomData = {
+        createdAt: Date.now(),
+        password: roomPassword || null
+      };
+      
+      db.ref("rooms/" + roomName).set(roomData);
       document.getElementById("roomName").value = "";
+      document.getElementById("roomPassword").value = "";
     }
 
     db.ref("rooms").on("value", snapshot => {
       const rooms = snapshot.val();
       const roomList = document.getElementById("roomList");
       roomList.innerHTML = "";
+      
       for (let room in rooms) {
         const li = document.createElement("li");
-        li.textContent = room;
-        li.onclick = () => enterRoom(room);
+        const hasPassword = rooms[room].password;
+        
+        li.innerHTML = `
+          <span>${room}</span>
+          ${hasPassword ? '<span class="lock-icon">🔒</span>' : ''}
+        `;
+        
+        li.onclick = () => {
+          if (hasPassword) {
+            selectedRoomForPassword = room;
+            document.getElementById("passwordModal").style.display = "block";
+          } else {
+            enterRoom(room);
+          }
+        };
+        
         roomList.appendChild(li);
       }
     });
+
+    function closePasswordModal() {
+      document.getElementById("passwordModal").style.display = "none";
+      selectedRoomForPassword = null;
+    }
+
+    function checkPassword() {
+      const inputPassword = document.getElementById("roomPasswordInput").value;
+      
+      db.ref("rooms/" + selectedRoomForPassword + "/password").once("value", snapshot => {
+        const roomPassword = snapshot.val();
+        
+        if (inputPassword === roomPassword) {
+          document.getElementById("passwordModal").style.display = "none";
+          document.getElementById("roomPasswordInput").value = "";
+          enterRoom(selectedRoomForPassword);
+        } else {
+          alert("비밀번호가 틀렸습니다.");
+        }
+      });
+    }
 
     function enterRoom(roomName) {
       currentRoom = roomName;
       document.getElementById("chatSection").style.display = "block";
       document.getElementById("currentRoomTitle").innerText = `💬 ${roomName}`;
       listenForMessages();
+      listenForDrawings();
+      listenForQuizzes();
     }
 
     function exitRoom() {
       currentRoom = null;
+      isFullscreen = false;
+      myActiveQuizzes.clear(); // 활성 퀴즈 목록 초기화
+      document.body.classList.remove('fullscreen');
+      document.getElementById("chatSection").classList.remove('fullscreen');
+      document.getElementById("fullscreenBtn").innerText = "🔍 확대";
       document.getElementById("chatSection").style.display = "none";
       document.getElementById("chat").innerHTML = "";
+      document.getElementById("quizResultButtons").innerHTML = "";
+    }
+
+    // 전체화면 토글 함수
+    function toggleFullscreen() {
+      isFullscreen = !isFullscreen;
+      const chatSection = document.getElementById("chatSection");
+      const fullscreenBtn = document.getElementById("fullscreenBtn");
+      
+      if (isFullscreen) {
+        document.body.classList.add('fullscreen');
+        chatSection.classList.add('fullscreen');
+        fullscreenBtn.innerText = "🔻 축소";
+      } else {
+        document.body.classList.remove('fullscreen');
+        chatSection.classList.remove('fullscreen');
+        fullscreenBtn.innerText = "🔍 확대";
+      }
+    }
+
+    // 카메라 관련 함수들
+    let stream;
+
+    async function openCamera() {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'user' },
+          audio: false 
+        });
+        
+        const video = document.getElementById('videoElement');
+        video.srcObject = stream;
+        document.getElementById('cameraModal').style.display = 'block';
+      } catch (error) {
+        console.error('카메라 접근 오류:', error);
+        alert('카메라에 접근할 수 없습니다.');
+      }
+    }
+
+    function closeCamera() {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+      document.getElementById('cameraModal').style.display = 'none';
+    }
+
+    async function capturePhoto() {
+      const video = document.getElementById('videoElement');
+      const canvas = document.getElementById('photoCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0);
+      
+      canvas.toBlob(async (blob) => {
+        try {
+          const storageRef = storage.ref(`photos/${Date.now()}_photo.jpg`);
+          const snapshot = await storageRef.put(blob);
+          const imageUrl = await snapshot.ref.getDownloadURL();
+          
+          const msgData = {
+            text: "📷 사진을 촬영했습니다",
+            sender: username,
+            image: imageUrl,
+            timestamp: Date.now()
+          };
+          
+          await db.ref(`messages/${currentRoom}`).push(msgData);
+          closeCamera();
+        } catch (error) {
+          console.error("사진 업로드 오류:", error);
+          alert("사진 업로드에 실패했습니다.");
+        }
+      }, 'image/jpeg', 0.8);
     }
 
     async function sendMessage() {
       const messageText = document.getElementById("messageInput").value.trim();
-      const imageFile = document.getElementById("imageInput").files[0];
-      let imageUrl = null;
-
-      if (imageFile) {
-        const storageRef = storage.ref(`images/${Date.now()}_${imageFile.name}`);
-        await storageRef.put(imageFile);
-        imageUrl = await storageRef.getDownloadURL();
-      }
-
-      if (messageText === "" && !imageUrl) return;
+      if (messageText === "") return;
 
       const msgData = {
-        text: messageText || "",
+        text: messageText,
         sender: username,
-        image: imageUrl || null,
         timestamp: Date.now()
       };
 
-      db.ref(`messages/${currentRoom}`).push(msgData);
-      document.getElementById("messageInput").value = "";
-      document.getElementById("imageInput").value = "";
+      try {
+        await db.ref(`messages/${currentRoom}`).push(msgData);
+        document.getElementById("messageInput").value = "";
+      } catch (error) {
+        console.error("메시지 전송 오류:", error);
+        alert("메시지 전송에 실패했습니다.");
+      }
     }
 
     function listenForMessages() {
@@ -255,17 +817,536 @@
       db.ref(`messages/${currentRoom}`).on("child_added", snapshot => {
         const msg = snapshot.val();
         const div = document.createElement("div");
-        div.className = "message";
-        div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
-        if (msg.image) {
-          const img = document.createElement("img");
-          img.src = msg.image;
-          div.appendChild(img);
+        
+        if (msg.type === 'quiz') {
+          div.className = "message quiz-message";
+          div.innerHTML = `
+            <strong>${msg.sender}님이 퀴즈를 출제했습니다!</strong><br>
+            <strong>문제:</strong> ${msg.text}<br>
+            <button onclick="participateQuiz('${snapshot.key}')" style="margin-top: 10px;">❓ 퀴즈 참여하기</button>
+          `;
+        } else if (msg.type === 'quiz-participation') {
+          div.className = "message participation-message";
+          div.innerHTML = `👤 ${msg.sender}님이 퀴즈에 참여했습니다.`;
+        } else if (msg.type === 'quiz-result') {
+          div.className = "message quiz-message";
+          div.innerHTML = `<strong>📊 퀴즈 결과 발표</strong><br>${msg.text}`;
+        } else {
+          div.className = "message";
+          div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+          
+          if (msg.image) {
+            const img = document.createElement("img");
+            img.src = msg.image;
+            img.onload = () => {
+              chat.scrollTop = chat.scrollHeight;
+            };
+            div.appendChild(img);
+          }
         }
+        
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
       });
     }
+
+    // 그림판 기능들
+    function openDrawingBoard() {
+      document.getElementById("drawingModal").style.display = "block";
+      initCanvas();
+    }
+
+    function closeDrawingBoard() {
+      document.getElementById("drawingModal").style.display = "none";
+    }
+
+    function initCanvas() {
+      canvas = document.getElementById("drawingCanvas");
+      ctx = canvas.getContext("2d");
+      
+      // 모바일에서 캔버스 크기 조정
+      if (window.innerWidth <= 768) {
+        canvas.width = window.innerWidth - 40;
+        canvas.height = 300;
+      }
+      
+      // 기존 그림 불러오기
+      db.ref(`drawings/${currentRoom}`).once("value", snapshot => {
+        const drawingData = snapshot.val();
+        if (drawingData && drawingData.imageData) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = drawingData.imageData;
+        }
+      });
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+
+      // 터치 이벤트 추가 (모바일 지원)
+      canvas.addEventListener('touchstart', handleTouchStart);
+      canvas.addEventListener('touchmove', handleTouchMove);
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      isDrawing = true;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      if (!isDrawing) return;
+      
+      const touch = e.touches[0];
+      const rect = canvas.getBoundingClientRect();
+      const x = touch.clientX - rect.left;
+      const y = touch.clientY - rect.top;
+      
+      ctx.lineWidth = currentTool === 'eraser' ? 10 : 2;
+      ctx.lineCap = 'round';
+      
+      if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+      }
+      
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    function selectColor(color) {
+      currentColor = color;
+      document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function selectTool(tool) {
+      currentTool = tool;
+      document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tool + 'Tool').classList.add('active');
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      ctx.lineWidth = currentTool === 'eraser' ? 10 : 2;
+      ctx.lineCap = 'round';
+      
+      if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+      } else {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = currentColor;
+      }
+      
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      
+      // 그림을 Firebase에 저장
+      const imageData = canvas.toDataURL();
+      db.ref(`drawings/${currentRoom}`).set({
+        imageData: imageData,
+        lastModified: Date.now()
+      });
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      db.ref(`drawings/${currentRoom}`).remove();
+    }
+
+    function saveDrawing() {
+      const imageData = canvas.toDataURL();
+      const msgData = {
+        text: "📋 그림을 공유했습니다",
+        sender: username,
+        image: imageData,
+        timestamp: Date.now()
+      };
+      
+      db.ref(`messages/${currentRoom}`).push(msgData);
+      closeDrawingBoard();
+    }
+
+    function listenForDrawings() {
+      db.ref(`drawings/${currentRoom}`).on("value", snapshot => {
+        const drawingData = snapshot.val();
+        if (drawingData && drawingData.imageData && canvas) {
+          const img = new Image();
+          img.onload = () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(img, 0, 0);
+          };
+          img.src = drawingData.imageData;
+        }
+      });
+    }
+
+    // 퀴즈 관련 함수들 - 수정된 부분
+    function openQuizModal() {
+      document.getElementById("quizModal").style.display = "block";
+      toggleQuizType(); // 초기 설정
+    }
+
+    function closeQuizModal() {
+      document.getElementById("quizModal").style.display = "none";
+      // 폼 초기화
+      document.getElementById("quizQuestion").value = "";
+      const optionInputs = document.querySelectorAll(".option-input");
+      optionInputs.forEach(input => input.value = "");
+      document.getElementById("shortAnswerCorrect").value = "";
+    }
+
+    function toggleQuizType() {
+      const quizType = document.getElementById("quizType").value;
+      const multipleOptions = document.getElementById("multipleOptions");
+      const shortAnswer = document.getElementById("shortAnswer");
+      
+      if (quizType === "multiple") {
+        multipleOptions.style.display = "block";
+        shortAnswer.style.display = "none";
+      } else {
+        multipleOptions.style.display = "none";
+        shortAnswer.style.display = "block";
+      }
+    }
+
+    function addOption() {
+      const multipleOptions = document.getElementById("multipleOptions");
+      const optionCount = document.querySelectorAll(".option-input").length;
+      
+      const newOption = document.createElement("input");
+      newOption.type = "text";
+      newOption.className = "option-input";
+      newOption.placeholder = `선택지 ${optionCount + 1}`;
+      
+      const addButton = multipleOptions.querySelector("button");
+      multipleOptions.insertBefore(newOption, addButton);
+      
+      // 정답 선택지 업데이트
+      const correctAnswer = document.getElementById("correctAnswer");
+      const newOptionElement = document.createElement("option");
+      newOptionElement.value = optionCount + 1;
+      newOptionElement.textContent = `${optionCount + 1}번`;
+      correctAnswer.appendChild(newOptionElement);
+    }
+
+    function submitQuiz() {
+      const question = document.getElementById("quizQuestion").value.trim();
+      const quizType = document.getElementById("quizType").value;
+      
+      if (!question) {
+        alert("문제를 입력해주세요.");
+        return;
+      }
+      
+      let quizData = {
+        question: question,
+        type: quizType,
+        creator: username,
+        active: true,
+        participants: {},
+        timestamp: Date.now()
+      };
+      
+      if (quizType === "multiple") {
+        const optionInputs = document.querySelectorAll(".option-input");
+        const options = [];
+        
+        optionInputs.forEach(input => {
+          if (input.value.trim()) {
+            options.push(input.value.trim());
+          }
+        });
+        
+        if (options.length < 2) {
+          alert("객관식은 최소 2개의 선택지가 필요합니다.");
+          return;
+        }
+        
+        const correctAnswerIndex = parseInt(document.getElementById("correctAnswer").value) - 1;
+        if (correctAnswerIndex >= options.length) {
+          alert("정답 번호가 선택지 개수를 초과합니다.");
+          return;
+        }
+        
+        quizData.options = options;
+        quizData.correctAnswer = correctAnswerIndex;
+      } else {
+        const correctAnswer = document.getElementById("shortAnswerCorrect").value.trim();
+        if (!correctAnswer) {
+          alert("정답을 입력해주세요.");
+          return;
+        }
+        quizData.correctAnswer = correctAnswer;
+      }
+      
+      // Firebase에 퀴즈 저장
+      const quizRef = db.ref(`quizzes/${currentRoom}`).push(quizData);
+      const quizId = quizRef.key;
+      
+      // 내가 출제한 퀴즈 목록에 추가
+      myActiveQuizzes.add(quizId);
+      
+      // 채팅에 퀴즈 알림 메시지 전송
+      const msgData = {
+        text: question,
+        sender: username,
+        type: 'quiz',
+        quizId: quizId,
+        timestamp: Date.now()
+      };
+      
+      db.ref(`messages/${currentRoom}`).push(msgData);
+      
+      closeQuizModal();
+      
+      // 결과 발표 버튼 추가
+      updateQuizResultButtons();
+    }
+
+    function participateQuiz(messageKey) {
+      // 메시지에서 퀴즈 정보 가져오기
+      db.ref(`messages/${currentRoom}/${messageKey}`).once("value", snapshot => {
+        const msg = snapshot.val();
+        if (!msg || msg.type !== 'quiz') {
+          alert("퀴즈 정보를 찾을 수 없습니다.");
+          return;
+        }
+        
+        const quizId = msg.quizId;
+        
+        // 퀴즈 데이터 가져오기
+        db.ref(`quizzes/${currentRoom}/${quizId}`).once("value", quizSnapshot => {
+          const quiz = quizSnapshot.val();
+          if (!quiz) {
+            alert("퀴즈를 찾을 수 없습니다.");
+            return;
+          }
+          
+          if (!quiz.active) {
+            alert("이미 종료된 퀴즈입니다.");
+            return;
+          }
+          
+          // 이미 참여했는지 확인
+          if (quiz.participants && quiz.participants[username]) {
+            alert("이미 참여한 퀴즈입니다.");
+            return;
+          }
+          
+          currentQuiz = quiz;
+          currentQuizId = quizId;
+          showQuizParticipationModal();
+          
+          // 참여 알림 메시지 전송
+          const participationMsg = {
+            text: "",
+            sender: username,
+            type: 'quiz-participation',
+            timestamp: Date.now()
+          };
+          
+          db.ref(`messages/${currentRoom}`).push(participationMsg);
+        });
+      });
+    }
+
+    function showQuizParticipationModal() {
+      const quizContent = document.getElementById("quizContent");
+      let contentHTML = `<h4>${currentQuiz.question}</h4>`;
+      
+      if (currentQuiz.type === "multiple") {
+        contentHTML += '<div class="quiz-options">';
+        currentQuiz.options.forEach((option, index) => {
+          contentHTML += `
+            <div class="quiz-option" onclick="selectQuizOption(${index})">
+              ${index + 1}. ${option}
+            </div>
+          `;
+        });
+        contentHTML += '</div>';
+      } else {
+        contentHTML += '<input type="text" id="shortAnswerInput" class="quiz-input" placeholder="답을 입력하세요">';
+      }
+      
+      quizContent.innerHTML = contentHTML;
+      document.getElementById("quizParticipateModal").style.display = "block";
+    }
+
+    function selectQuizOption(index) {
+      document.querySelectorAll('.quiz-option').forEach(option => {
+        option.classList.remove('selected');
+      });
+      event.target.classList.add('selected');
+      event.target.dataset.selected = index;
+    }
+
+    function closeQuizParticipate() {
+      document.getElementById("quizParticipateModal").style.display = "none";
+    }
+
+    function submitQuizAnswer() {
+      let userAnswer;
+      
+      if (currentQuiz.type === "multiple") {
+        const selectedOption = document.querySelector('.quiz-option.selected');
+        if (!selectedOption) {
+          alert("선택지를 선택해주세요.");
+          return;
+        }
+        userAnswer = parseInt(selectedOption.dataset.selected);
+      } else {
+        const answerInput = document.getElementById("shortAnswerInput");
+        if (!answerInput.value.trim()) {
+          alert("답을 입력해주세요.");
+          return;
+        }
+        userAnswer = answerInput.value.trim();
+      }
+      
+      // 답안 저장
+      db.ref(`quizzes/${currentRoom}/${currentQuizId}/participants/${username}`).set({
+        answer: userAnswer,
+        timestamp: Date.now()
+      });
+      
+      closeQuizParticipate();
+      alert("답안이 제출되었습니다!");
+    }
+
+    function showQuizResults(quizId) {
+      db.ref(`quizzes/${currentRoom}/${quizId}`).once("value", snapshot => {
+        const quiz = snapshot.val();
+        if (!quiz) return;
+        
+        const participants = quiz.participants || {};
+        let resultText = `<strong>📊 "${quiz.question}" 결과</strong><br><br>`;
+        
+        let correctCount = 0;
+        let totalCount = Object.keys(participants).length;
+        
+        for (let participant in participants) {
+          const answer = participants[participant].answer;
+          let isCorrect = false;
+          
+          if (quiz.type === "multiple") {
+            isCorrect = answer === quiz.correctAnswer;
+            resultText += `👤 ${participant}: ${quiz.options[answer]} ${isCorrect ? '✅' : '❌'}<br>`;
+          } else {
+            isCorrect = answer.toLowerCase() === quiz.correctAnswer.toLowerCase();
+            resultText += `👤 ${participant}: "${answer}" ${isCorrect ? '✅' : '❌'}<br>`;
+          }
+          
+          if (isCorrect) correctCount++;
+        }
+        
+        resultText += `<br><strong>정답률: ${totalCount > 0 ? Math.round((correctCount/totalCount)*100) : 0}% (${correctCount}/${totalCount})</strong>`;
+        
+        if (quiz.type === "multiple") {
+          resultText += `<br><strong>정답: ${quiz.correctAnswer + 1}번 - ${quiz.options[quiz.correctAnswer]}</strong>`;
+        } else {
+          resultText += `<br><strong>정답: "${quiz.correctAnswer}"</strong>`;
+        }
+        
+        // 결과 메시지 전송
+        const resultMsg = {
+          text: resultText,
+          sender: username,
+          type: 'quiz-result',
+          timestamp: Date.now()
+        };
+        
+        db.ref(`messages/${currentRoom}`).push(resultMsg);
+        
+        // 퀴즈 비활성화
+        db.ref(`quizzes/${currentRoom}/${quizId}/active`).set(false);
+        
+        // 내 퀴즈 목록에서 제거
+        myActiveQuizzes.delete(quizId);
+        
+        // 결과 발표 버튼 업데이트
+        updateQuizResultButtons();
+      });
+    }
+
+    function updateQuizResultButtons() {
+      const container = document.getElementById("quizResultButtons");
+      container.innerHTML = "";
+      
+      myActiveQuizzes.forEach(quizId => {
+        const button = document.createElement("button");
+        button.className = "success-btn";
+        button.style.margin = "5px";
+        button.innerHTML = "📊 결과 발표";
+        button.onclick = () => showQuizResults(quizId);
+        container.appendChild(button);
+      });
+    }
+
+    function listenForQuizzes() {
+      // 퀴즈 상태 변경 감지
+      db.ref(`quizzes/${currentRoom}`).on("child_changed", snapshot => {
+        const quiz = snapshot.val();
+        const quizId = snapshot.key;
+        
+        if (quiz.creator === username && !quiz.active) {
+          // 내가 출제한 퀴즈가 비활성화되면 목록에서 제거
+          myActiveQuizzes.delete(quizId);
+          updateQuizResultButtons();
+        }
+      });
+    }
+
+    // Enter 키로 메시지 보내기
+    document.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        if (document.getElementById('messageInput') === document.activeElement) {
+          sendMessage();
+        } else if (document.getElementById('roomPasswordInput') === document.activeElement) {
+          checkPassword();
+        }
+      }
+    });
+
+    // 모바일에서 body 스크롤 방지 (그림판 사용시)
+    document.getElementById('drawingModal').addEventListener('touchmove', function(e) {
+      e.preventDefault();
+    }, { passive: false });
+
   </script>
 
 </body>
