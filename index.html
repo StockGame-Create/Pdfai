@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8" />
-<title>WebRTC + Firebase 영상 통화 + 채팅</title>
+<title>WebRTC + Firebase 방 생성 / 입장 분리 예제</title>
 <style>
   #localVideo, #remoteVideo {
     width: 45%; height: 240px; background: #222;
@@ -14,11 +14,13 @@
 </style>
 </head>
 <body>
-<h2>WebRTC + Firebase 영상 통화 + 채팅</h2>
+<h2>WebRTC 방 생성 / 입장 분리</h2>
 
-<input id="roomInput" placeholder="룸 아이디 입력 (예: room1)" />
+<button id="createBtn">방 생성</button>
+<input id="joinRoomInput" placeholder="입장할 방 ID 입력" />
 <button id="joinBtn">방 입장</button>
-<br /><br />
+
+<p>방 ID: <span id="roomIdDisplay">없음</span></p>
 
 <div id="videos">
   <video id="localVideo" autoplay muted playsinline></video>
@@ -39,8 +41,8 @@ import {
   push,
   onChildAdded,
   onValue,
-  remove,
   update,
+  remove,
   child
 } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
@@ -58,10 +60,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+const createBtn = document.getElementById('createBtn');
+const joinBtn = document.getElementById('joinBtn');
+const joinRoomInput = document.getElementById('joinRoomInput');
+const roomIdDisplay = document.getElementById('roomIdDisplay');
 const localVideo = document.getElementById('localVideo');
 const remoteVideo = document.getElementById('remoteVideo');
-const roomInput = document.getElementById('roomInput');
-const joinBtn = document.getElementById('joinBtn');
 const chatDiv = document.getElementById('chat');
 const input = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
@@ -84,124 +88,140 @@ async function startLocalStream() {
   localVideo.srcObject = localStream;
 }
 
-async function joinRoom(room) {
-  roomId = room;
+function generateRoomId() {
+  // 랜덤 6자리 방 ID 생성 (원하는 형식으로 수정 가능)
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+async function createRoom() {
+  await startLocalStream();
+
+  roomId = generateRoomId();
+  roomIdDisplay.textContent = roomId;
   roomRef = ref(db, 'rooms/' + roomId);
   chatRef = ref(db, 'chats/' + roomId);
 
-  // 방 정보 읽어오기
-  const roomSnapshot = await get(roomRef);
+  peerConnection = new RTCPeerConnection(servers);
+  isCaller = true;
 
-  if (!roomSnapshot.exists()) {
-    // 방 생성 및 offer 준비
-    isCaller = true;
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  registerPeerConnectionListeners();
 
-    // Create peer connection
-    peerConnection = new RTCPeerConnection(servers);
+  peerConnection.onicecandidate = event => {
+    if (event.candidate) {
+      push(child(roomRef, 'callerCandidates'), event.candidate.toJSON());
+    }
+  };
 
-    registerPeerConnectionListeners();
+  peerConnection.ontrack = event => {
+    remoteVideo.srcObject = event.streams[0];
+  };
 
-    // 로컬 스트림을 peerConnection에 추가
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  const offer = await peerConnection.createOffer();
+  await peerConnection.setLocalDescription(offer);
 
-    // ICE candidate가 생길 때 Firebase에 저장
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        push(child(roomRef, 'callerCandidates'), event.candidate.toJSON());
-      }
-    };
+  await set(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
 
-    // 상대방 트랙 수신 시 remoteVideo에 연결
-    peerConnection.ontrack = event => {
-      remoteVideo.srcObject = event.streams[0];
-    };
+  onValue(child(roomRef, 'answer'), async snapshot => {
+    const answer = snapshot.val();
+    if (answer && !peerConnection.currentRemoteDescription) {
+      const rtcAnswer = new RTCSessionDescription(answer);
+      await peerConnection.setRemoteDescription(rtcAnswer);
+    }
+  });
 
-    // offer 생성
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+  onChildAdded(child(roomRef, 'calleeCandidates'), snapshot => {
+    const candidate = new RTCIceCandidate(snapshot.val());
+    peerConnection.addIceCandidate(candidate);
+  });
 
-    // offer를 Firebase에 저장
-    await set(roomRef, { 'offer': { type: offer.type, sdp: offer.sdp } });
-
-    // 상대방의 answer를 기다림
-    onValue(child(roomRef, 'answer'), async snapshot => {
-      const answer = snapshot.val();
-      if (!peerConnection.currentRemoteDescription && answer) {
-        const rtcAnswer = new RTCSessionDescription(answer);
-        await peerConnection.setRemoteDescription(rtcAnswer);
-      }
-    });
-
-    // 상대방 ICE candidate 수신
-    onChildAdded(child(roomRef, 'calleeCandidates'), snapshot => {
-      const candidate = new RTCIceCandidate(snapshot.val());
-      peerConnection.addIceCandidate(candidate);
-    });
-
-  } else {
-    // 이미 방이 존재 -> answerer 역할
-    isCaller = false;
-
-    peerConnection = new RTCPeerConnection(servers);
-    registerPeerConnectionListeners();
-
-    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-
-    peerConnection.onicecandidate = event => {
-      if (event.candidate) {
-        push(child(roomRef, 'calleeCandidates'), event.candidate.toJSON());
-      }
-    };
-
-    peerConnection.ontrack = event => {
-      remoteVideo.srcObject = event.streams[0];
-    };
-
-    // 방에서 offer 읽기
-    const offer = roomSnapshot.val().offer;
-    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-
-    // answer 생성
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    // Firebase에 answer 저장
-    await update(roomRef, { answer: { type: answer.type, sdp: answer.sdp } });
-
-    // callerCandidates 수신
-    onChildAdded(child(roomRef, 'callerCandidates'), snapshot => {
-      const candidate = new RTCIceCandidate(snapshot.val());
-      peerConnection.addIceCandidate(candidate);
-    });
-  }
-
-  // 채팅 수신 처리
+  // 채팅 수신
   onChildAdded(chatRef, snapshot => {
     const { name, msg } = snapshot.val();
     chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
     chatDiv.scrollTop = chatDiv.scrollHeight;
   });
+
+  createBtn.disabled = true;
+  joinBtn.disabled = true;
+  joinRoomInput.disabled = true;
+}
+
+async function joinRoom() {
+  const inputRoomId = joinRoomInput.value.trim();
+  if (!inputRoomId) {
+    alert("입장할 방 ID를 입력하세요.");
+    return;
+  }
+
+  await startLocalStream();
+
+  roomId = inputRoomId.toUpperCase();
+  roomIdDisplay.textContent = roomId;
+  roomRef = ref(db, 'rooms/' + roomId);
+  chatRef = ref(db, 'chats/' + roomId);
+
+  const roomSnapshot = await get(roomRef);
+  if (!roomSnapshot.exists()) {
+    alert("해당 방이 없습니다.");
+    return;
+  }
+
+  peerConnection = new RTCPeerConnection(servers);
+  isCaller = false;
+
+  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+  registerPeerConnectionListeners();
+
+  peerConnection.onicecandidate = event => {
+    if (event.candidate) {
+      push(child(roomRef, 'calleeCandidates'), event.candidate.toJSON());
+    }
+  };
+
+  peerConnection.ontrack = event => {
+    remoteVideo.srcObject = event.streams[0];
+  };
+
+  const offer = roomSnapshot.val().offer;
+  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+
+  const answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  await update(roomRef, { answer: { type: answer.type, sdp: answer.sdp } });
+
+  onChildAdded(child(roomRef, 'callerCandidates'), snapshot => {
+    const candidate = new RTCIceCandidate(snapshot.val());
+    peerConnection.addIceCandidate(candidate);
+  });
+
+  // 채팅 수신
+  onChildAdded(chatRef, snapshot => {
+    const { name, msg } = snapshot.val();
+    chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  });
+
+  createBtn.disabled = true;
+  joinBtn.disabled = true;
+  joinRoomInput.disabled = true;
 }
 
 function registerPeerConnectionListeners() {
   peerConnection.onconnectionstatechange = () => {
-    console.log('Connection state change:', peerConnection.connectionState);
+    console.log('Connection state:', peerConnection.connectionState);
   };
 }
 
-joinBtn.onclick = async () => {
-  if (!roomInput.value.trim()) {
-    alert("룸 아이디를 입력하세요.");
+createBtn.onclick = createRoom;
+joinBtn.onclick = joinRoom;
+
+sendBtn.onclick = () => {
+  if (!chatRef) {
+    alert("방에 먼저 입장해주세요.");
     return;
   }
-  await startLocalStream();
-  await joinRoom(roomInput.value.trim());
-  joinBtn.disabled = true;
-  roomInput.disabled = true;
-};
-
-// 채팅 보내기
-sendBtn.onclick = () => {
   const name = prompt("이름을 입력하세요") || "익명";
   const msg = input.value.trim();
   if (msg) {
