@@ -1,80 +1,105 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>PDF AI 챗봇</title>
+<meta charset="UTF-8">
+<title>10분 자유토론(Firebase)</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+<style>
+body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+#video { width: 400px; height: 300px; background: #222; margin-top: 16px; }
+.flipped { transform: scaleX(-1); }
+#chat { width: 400px; height: 120px; border: 1px solid #bbb; overflow-y: auto; margin: 0 auto 8px; }
+#input { width: 300px; }
+#timer { font-weight: bold; margin: 16px; }
+#startBtn[disabled] { background: #ccc; }
+</style>
 </head>
 <body>
-  <h2>PDF 기반 AI 질문 시스템 (Hugging Face)</h2>
+  <h2>10분 자유토론(Firebase)</h2>
+  <input type="text" id="name" placeholder="이름 입력" />
+  <button id="startBtn">토론 시작</button>
+  <div id="timer">남은 시간: 10:00</div>
+  <video id="video" autoplay muted></video><br>
+  <button id="flipBtn">반전</button>
+  <div id="chat"></div>
+  <input id="input" placeholder="채팅 메세지">
+  <button id="sendBtn">전송</button>
+<script>
+  // Firebase 초기화
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
+    authDomain: "amazi-6de63.firebaseapp.com",
+    databaseURL: "https://amazi-6de63-default-rtdb.firebaseio.com",
+    projectId: "amazi-6de63",
+    storageBucket: "amazi-6de63.appspot.com",
+    messagingSenderId: "274825287462",
+    appId: "1:274825287462:web:1b1de31d93d7a3e83693e7",
+    measurementId: "G-DT4JLH8QEC"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-  <input type="file" id="pdfInput" accept=".pdf"><br><br>
-  <textarea id="question" placeholder="Ask your question here..." rows="3" cols="60"></textarea><br><br>
-  <button onclick="askQuestion()">Ask AI</button>
+  // 토론 참여 및 상태 관리
+  const roomRef = db.ref("room");
+  const chatRef = db.ref("chat");
+  const startBtn = document.getElementById('startBtn');
+  const video = document.getElementById('video');
+  const flipBtn = document.getElementById('flipBtn');
+  const timerDiv = document.getElementById('timer');
+  let time = 600, timer, joined = false, stream;
 
-  <h3>Answer:</h3>
-  <div id="answer"></div>
+  // 현재 상태 받아와서 버튼 제어
+  roomRef.child("status").on("value", snap => {
+    if (snap.val() === "busy") startBtn.disabled = true;
+    else startBtn.disabled = false;
+  });
 
-  <!-- PDF.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-  <script>
-    let pdfText = "";
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js';
-
-    document.getElementById('pdfInput').addEventListener('change', function (e) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = function () {
-        const typedarray = new Uint8Array(this.result);
-        pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-          let pages = [];
-          for (let i = 1; i <= pdf.numPages; i++) {
-            pages.push(pdf.getPage(i).then(page => {
-              return page.getTextContent().then(textContent => {
-                return textContent.items.map(item => item.str).join(" ");
-              });
-            }));
-          }
-          Promise.all(pages).then(results => {
-            pdfText = results.join("\n\n");
-            alert("✅ PDF Loaded!");
-          });
-        });
-      };
-      reader.readAsArrayBuffer(file);
-    });
-
-    async function askQuestion() {
-      const question = document.getElementById("question").value;
-      if (!pdfText || !question) {
-        alert("Please upload a PDF and enter a question.");
-        return;
+  startBtn.onclick = async () => {
+    if (!document.getElementById('name').value) { alert("이름 입력!"); return; }
+    roomRef.child("status").set("busy");
+    joined = true;
+    startBtn.disabled = true;
+    video.style.display = '';
+    stream = await navigator.mediaDevices.getUserMedia({video:true});
+    video.srcObject = stream;
+    timerDiv.textContent = `남은 시간: 10:00`;
+    time = 600;
+    timer = setInterval(() => {
+      time--;
+      let mm = String(Math.floor(time/60)).padStart(2,0);
+      let ss = String(time%60).padStart(2,0);
+      timerDiv.textContent = `남은 시간: ${mm}:${ss}`;
+      if (time <= 0) {
+        clearInterval(timer);
+        stream.getTracks().forEach(track => track.stop());
+        roomRef.child("status").set("ready");
+        joined = false;
+        startBtn.disabled = false;
+        timerDiv.textContent = "종료!";
       }
+    }, 1000);
+  };
 
-      const apiUrl = "https://api-inference.huggingface.co/models/deepset/roberta-base-squad2";
-      const cleanText = pdfText.replace(/[\x00-\x1F\x7F]/g, '');
+  flipBtn.onclick = () => video.classList.toggle('flipped');
 
-      const response = await fetch(apiUrl, {
-        method: "POST",
-        headers: {
-          "Authorization": "Bearer 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", // 당신의 API 키
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          inputs: {
-            question: question,
-            context: cleanText.slice(0, 2000)
-          }
-        })
-      });
-
-      const resultText = await response.text();
-      try {
-        const result = JSON.parse(resultText);
-        document.getElementById("answer").innerText = result.answer || "No suitable answer found.";
-      } catch (e) {
-        document.getElementById("answer").innerText = "❌ Error: " + resultText;
-      }
+  // 채팅 실시간 수신
+  const chatDiv = document.getElementById('chat');
+  const sendBtn = document.getElementById('sendBtn');
+  const input = document.getElementById('input');
+  chatRef.on("child_added", snap => {
+    const {name, msg} = snap.val();
+    chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
+    chatDiv.scrollTop = chatDiv.scrollHeight;
+  });
+  sendBtn.onclick = () => {
+    const msg = input.value.trim();
+    const name = document.getElementById('name').value;
+    if (msg && name) {
+      chatRef.push({name, msg});
+      input.value = '';
     }
-  </script>
+  };
+</script>
 </body>
 </html>
