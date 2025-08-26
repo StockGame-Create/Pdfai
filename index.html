@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Firebase 채팅 (방 생성/입장 수정)</title>
+  <title>Firebase 채팅 - 방 생성/입장</title>
   <style>
     #chat {
       width: 90%;
@@ -75,14 +75,21 @@
     async function createRoom() {
       roomId = generateRoomId();
       roomIdDisplay.textContent = roomId;
-      chatRef = ref(db, 'chats/' + roomId);
-      // 방 생성 시 초기화 (채팅 시작 준비)
-      set(chatRef, { created: true });  // 방 존재 표시용
+
+      const roomRef = ref(db, 'rooms/' + roomId);
+      const chatPath = 'chats/' + roomId;
+      chatRef = ref(db, chatPath);
+
+      // ✅ 방 정보를 rooms/{roomId}에 등록
+      await set(roomRef, {
+        createdAt: Date.now()
+      });
+
+      alert(`방이 생성되었습니다. 방 ID: ${roomId}`);
       listenToChat();
       createBtn.disabled = true;
       joinBtn.disabled = true;
       joinRoomInput.disabled = true;
-      alert(`방이 생성되었습니다. 방 ID: ${roomId}`);
     }
 
     async function joinRoom() {
@@ -92,20 +99,22 @@
         return;
       }
 
-      const roomSnap = await get(ref(db, 'chats/' + inputRoomId));
+      const roomSnap = await get(ref(db, 'rooms/' + inputRoomId));
       if (!roomSnap.exists()) {
-        alert("해당 방이 존재하지 않습니다.");
+        alert("❌ 해당 방이 존재하지 않습니다.");
         return;
       }
 
       roomId = inputRoomId;
       roomIdDisplay.textContent = roomId;
       chatRef = ref(db, 'chats/' + roomId);
+
+      alert(`방 '${roomId}'에 입장하였습니다.`);
       listenToChat();
+
       createBtn.disabled = true;
       joinBtn.disabled = true;
       joinRoomInput.disabled = true;
-      alert(`방 '${roomId}'에 입장하였습니다.`);
     }
 
     function listenToChat() {
@@ -120,9 +129,10 @@
 
     sendBtn.onclick = () => {
       if (!chatRef) {
-        alert("방을 생성하거나 입장하세요.");
+        alert("방을 먼저 생성하거나 입장하세요.");
         return;
       }
+
       const name = prompt("이름을 입력하세요") || "익명";
       const msg = input.value.trim();
       if (msg) {
