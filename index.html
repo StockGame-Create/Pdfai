@@ -2,37 +2,158 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>Realtime Chat App</title>
+  <title>✨ Realtime Chat App</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-top: 10px; }
-    .message { margin-bottom: 10px; }
-    .message img { max-width: 200px; display: block; margin-top: 5px; }
-    #rooms { margin-top: 20px; }
+    /* 🔥 전체 배경 */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #7f00ff, #e100ff);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h2 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+      text-shadow: 1px 1px 5px rgba(0,0,0,0.5);
+    }
+
+    input, button {
+      padding: 10px 15px;
+      margin: 5px 0;
+      border: none;
+      border-radius: 5px;
+      font-size: 1em;
+    }
+
+    input[type="text"] {
+      width: 250px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    input[type="file"] {
+      color: white;
+    }
+
+    button {
+      background: #00c6ff;
+      background: linear-gradient(to right, #0072ff, #00c6ff);
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    #roomSection, #chatSection {
+      width: 100%;
+      max-width: 600px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      margin-top: 20px;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    #chat {
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 15px;
+      height: 300px;
+      overflow-y: auto;
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      background-color: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      animation: popIn 0.3s ease;
+    }
+
+    .message strong {
+      color: #00ffd5;
+    }
+
+    .message img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      padding: 8px 12px;
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    li:hover {
+      background-color: rgba(255,255,255,0.25);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"], button {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h2>Realtime Chat App</h2>
+  <h2>💬 Realtime Chat</h2>
 
-  <!-- 사용자 이름 입력 -->
+  <!-- 사용자 이름 -->
   <div id="nameSection">
-    <input type="text" id="username" placeholder="사용자 이름 입력">
+    <input type="text" id="username" placeholder="당신의 이름은?">
     <button onclick="setUsername()">이름 설정</button>
   </div>
 
-  <!-- 방 생성 -->
+  <!-- 방 만들기 및 목록 -->
   <div id="roomSection" style="display:none;">
     <input type="text" id="roomName" placeholder="방 이름 입력">
     <button onclick="createRoom()">방 만들기</button>
-    <h3>방 목록</h3>
+    <h3>📃 방 목록</h3>
     <ul id="roomList"></ul>
   </div>
 
-  <!-- 채팅창 -->
+  <!-- 채팅 화면 -->
   <div id="chatSection" style="display:none;">
     <h3 id="currentRoomTitle"></h3>
     <div id="chat"></div>
@@ -43,7 +164,6 @@
   </div>
 
   <script>
-    // ✅ Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
       authDomain: "amazi-6de63.firebaseapp.com",
@@ -55,7 +175,6 @@
       measurementId: "G-DT4JLH8QEC"
     };
 
-    // ✅ Firebase 초기화
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
     const storage = firebase.storage();
@@ -63,7 +182,6 @@
     let currentRoom = null;
     let username = null;
 
-    // ✅ 사용자 이름 설정
     function setUsername() {
       const nameInput = document.getElementById("username").value.trim();
       if (!nameInput) return alert("이름을 입력해주세요.");
@@ -72,50 +190,41 @@
       document.getElementById("roomSection").style.display = "block";
     }
 
-    // ✅ 방 생성
     function createRoom() {
       const roomName = document.getElementById("roomName").value.trim();
-      if (roomName === "") return alert("방 이름을 입력해주세요");
-
+      if (!roomName) return alert("방 이름을 입력해주세요.");
       db.ref("rooms/" + roomName).set({ createdAt: Date.now() });
       document.getElementById("roomName").value = "";
     }
 
-    // ✅ 방 목록 표시
     db.ref("rooms").on("value", snapshot => {
       const rooms = snapshot.val();
       const roomList = document.getElementById("roomList");
       roomList.innerHTML = "";
-
       for (let room in rooms) {
         const li = document.createElement("li");
         li.textContent = room;
-        li.style.cursor = "pointer";
         li.onclick = () => enterRoom(room);
         roomList.appendChild(li);
       }
     });
 
-    // ✅ 방 입장
     function enterRoom(roomName) {
       currentRoom = roomName;
       document.getElementById("chatSection").style.display = "block";
-      document.getElementById("currentRoomTitle").innerText = `채팅방: ${roomName}`;
+      document.getElementById("currentRoomTitle").innerText = `💬 ${roomName}`;
       listenForMessages();
     }
 
-    // ✅ 방 나가기
     function exitRoom() {
       currentRoom = null;
       document.getElementById("chatSection").style.display = "none";
       document.getElementById("chat").innerHTML = "";
     }
 
-    // ✅ 메시지 전송 (텍스트 + 이미지)
     async function sendMessage() {
       const messageText = document.getElementById("messageInput").value.trim();
       const imageFile = document.getElementById("imageInput").files[0];
-
       let imageUrl = null;
 
       if (imageFile) {
@@ -138,7 +247,6 @@
       document.getElementById("imageInput").value = "";
     }
 
-    // ✅ 메시지 수신
     function listenForMessages() {
       const chat = document.getElementById("chat");
       chat.innerHTML = "";
@@ -149,17 +257,16 @@
         const div = document.createElement("div");
         div.className = "message";
         div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
-
         if (msg.image) {
           const img = document.createElement("img");
           img.src = msg.image;
           div.appendChild(img);
         }
-
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
       });
     }
   </script>
+
 </body>
 </html>
