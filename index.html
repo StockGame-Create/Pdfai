@@ -1,14 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Realtime Chat App</title>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
   <style>
     body { font-family: sans-serif; padding: 20px; }
     #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-top: 10px; }
-    .message { margin-bottom: 5px; }
+    .message { margin-bottom: 10px; }
+    .message img { max-width: 200px; display: block; margin-top: 5px; }
     #rooms { margin-top: 20px; }
   </style>
 </head>
@@ -16,21 +18,28 @@
 
   <h2>Realtime Chat App</h2>
 
-  <div>
-    <input type="text" id="roomName" placeholder="방 이름 입력">
-    <button onclick="createRoom()">방 만들기</button>
+  <!-- 사용자 이름 입력 -->
+  <div id="nameSection">
+    <input type="text" id="username" placeholder="사용자 이름 입력">
+    <button onclick="setUsername()">이름 설정</button>
   </div>
 
-  <div id="rooms">
+  <!-- 방 생성 -->
+  <div id="roomSection" style="display:none;">
+    <input type="text" id="roomName" placeholder="방 이름 입력">
+    <button onclick="createRoom()">방 만들기</button>
     <h3>방 목록</h3>
     <ul id="roomList"></ul>
   </div>
 
+  <!-- 채팅창 -->
   <div id="chatSection" style="display:none;">
     <h3 id="currentRoomTitle"></h3>
     <div id="chat"></div>
     <input type="text" id="messageInput" placeholder="메시지 입력">
+    <input type="file" id="imageInput" accept="image/*">
     <button onclick="sendMessage()">보내기</button>
+    <button onclick="exitRoom()">나가기</button>
   </div>
 
   <script>
@@ -49,11 +58,21 @@
     // ✅ Firebase 초기화
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
 
-    // 현재 선택된 방 이름
     let currentRoom = null;
+    let username = null;
 
-    // ✅ 방 만들기
+    // ✅ 사용자 이름 설정
+    function setUsername() {
+      const nameInput = document.getElementById("username").value.trim();
+      if (!nameInput) return alert("이름을 입력해주세요.");
+      username = nameInput;
+      document.getElementById("nameSection").style.display = "none";
+      document.getElementById("roomSection").style.display = "block";
+    }
+
+    // ✅ 방 생성
     function createRoom() {
       const roomName = document.getElementById("roomName").value.trim();
       if (roomName === "") return alert("방 이름을 입력해주세요");
@@ -62,7 +81,7 @@
       document.getElementById("roomName").value = "";
     }
 
-    // ✅ 방 목록 실시간 갱신
+    // ✅ 방 목록 표시
     db.ref("rooms").on("value", snapshot => {
       const rooms = snapshot.val();
       const roomList = document.getElementById("roomList");
@@ -85,36 +104,62 @@
       listenForMessages();
     }
 
-    // ✅ 메시지 전송
-    function sendMessage() {
-      const message = document.getElementById("messageInput").value.trim();
-      if (message === "") return;
+    // ✅ 방 나가기
+    function exitRoom() {
+      currentRoom = null;
+      document.getElementById("chatSection").style.display = "none";
+      document.getElementById("chat").innerHTML = "";
+    }
+
+    // ✅ 메시지 전송 (텍스트 + 이미지)
+    async function sendMessage() {
+      const messageText = document.getElementById("messageInput").value.trim();
+      const imageFile = document.getElementById("imageInput").files[0];
+
+      let imageUrl = null;
+
+      if (imageFile) {
+        const storageRef = storage.ref(`images/${Date.now()}_${imageFile.name}`);
+        await storageRef.put(imageFile);
+        imageUrl = await storageRef.getDownloadURL();
+      }
+
+      if (messageText === "" && !imageUrl) return;
 
       const msgData = {
-        text: message,
+        text: messageText || "",
+        sender: username,
+        image: imageUrl || null,
         timestamp: Date.now()
       };
 
       db.ref(`messages/${currentRoom}`).push(msgData);
       document.getElementById("messageInput").value = "";
+      document.getElementById("imageInput").value = "";
     }
 
-    // ✅ 메시지 실시간 수신
+    // ✅ 메시지 수신
     function listenForMessages() {
       const chat = document.getElementById("chat");
       chat.innerHTML = "";
+      db.ref(`messages/${currentRoom}`).off();
 
-      db.ref(`messages/${currentRoom}`).off(); // 기존 리스너 제거
       db.ref(`messages/${currentRoom}`).on("child_added", snapshot => {
         const msg = snapshot.val();
         const div = document.createElement("div");
         div.className = "message";
-        div.textContent = msg.text;
+        div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+
+        if (msg.image) {
+          const img = document.createElement("img");
+          img.src = msg.image;
+          div.appendChild(img);
+        }
+
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
       });
     }
   </script>
-
 </body>
 </html>
