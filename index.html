@@ -1,234 +1,146 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<title>WebRTC + Firebase 방 생성 / 입장 분리 예제</title>
-<style>
-  #localVideo, #remoteVideo {
-    width: 45%; height: 240px; background: #222;
-  }
-  #videos { display: flex; justify-content: space-around; margin-bottom: 10px; }
-  #chat { width: 90%; height: 150px; border: 1px solid #ccc; overflow-y: auto; margin: 0 auto 10px; padding: 5px; }
-  #input, #sendBtn { font-size: 1rem; }
-  #input { width: 80%; }
-</style>
+  <meta charset="UTF-8" />
+  <title>Firebase 채팅 (방 생성/입장)</title>
+  <style>
+    #chat {
+      width: 90%;
+      height: 300px;
+      border: 1px solid #ccc;
+      overflow-y: auto;
+      margin: 10px auto;
+      padding: 5px;
+    }
+    #input, #sendBtn {
+      font-size: 1rem;
+    }
+    #input {
+      width: 75%;
+    }
+  </style>
 </head>
 <body>
-<h2>WebRTC 방 생성 / 입장 분리</h2>
+  <h2>Firebase 채팅</h2>
 
-<button id="createBtn">방 생성</button>
-<input id="joinRoomInput" placeholder="입장할 방 ID 입력" />
-<button id="joinBtn">방 입장</button>
+  <button id="createBtn">방 생성</button>
+  <input id="joinRoomInput" placeholder="입장할 방 ID 입력" />
+  <button id="joinBtn">방 입장</button>
 
-<p>방 ID: <span id="roomIdDisplay">없음</span></p>
+  <p>현재 방 ID: <span id="roomIdDisplay">없음</span></p>
 
-<div id="videos">
-  <video id="localVideo" autoplay muted playsinline></video>
-  <video id="remoteVideo" autoplay playsinline></video>
-</div>
+  <div id="chat"></div>
+  <input id="input" placeholder="메시지 입력" />
+  <button id="sendBtn">전송</button>
 
-<div id="chat"></div>
-<input id="input" placeholder="메시지 입력" />
-<button id="sendBtn">전송</button>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+    import {
+      getDatabase,
+      ref,
+      set,
+      push,
+      get,
+      onChildAdded
+    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  get,
-  push,
-  onChildAdded,
-  onValue,
-  update,
-  remove,
-  child
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
+      authDomain: "amazi-6de63.firebaseapp.com",
+      databaseURL: "https://amazi-6de63-default-rtdb.firebaseio.com",
+      projectId: "amazi-6de63",
+      storageBucket: "amazi-6de63.appspot.com",
+      messagingSenderId: "274825287462",
+      appId: "1:274825287462:web:1b1de31d93d7a3e83693e7",
+      measurementId: "G-DT4JLH8QEC"
+    };
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
-  authDomain: "amazi-6de63.firebaseapp.com",
-  databaseURL: "https://amazi-6de63-default-rtdb.firebaseio.com",
-  projectId: "amazi-6de63",
-  storageBucket: "amazi-6de63.appspot.com",
-  messagingSenderId: "274825287462",
-  appId: "1:274825287462:web:1b1de31d93d7a3e83693e7",
-  measurementId: "G-DT4JLH8QEC"
-};
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+    const createBtn = document.getElementById('createBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const joinRoomInput = document.getElementById('joinRoomInput');
+    const roomIdDisplay = document.getElementById('roomIdDisplay');
+    const chatDiv = document.getElementById('chat');
+    const input = document.getElementById('input');
+    const sendBtn = document.getElementById('sendBtn');
 
-const createBtn = document.getElementById('createBtn');
-const joinBtn = document.getElementById('joinBtn');
-const joinRoomInput = document.getElementById('joinRoomInput');
-const roomIdDisplay = document.getElementById('roomIdDisplay');
-const localVideo = document.getElementById('localVideo');
-const remoteVideo = document.getElementById('remoteVideo');
-const chatDiv = document.getElementById('chat');
-const input = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
+    let chatRef = null;
+    let roomId = null;
 
-let localStream = null;
-let peerConnection = null;
-let roomRef = null;
-let chatRef = null;
-let roomId = null;
-let isCaller = false;
-
-const servers = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" }
-  ]
-};
-
-async function startLocalStream() {
-  localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-  localVideo.srcObject = localStream;
-}
-
-function generateRoomId() {
-  // 랜덤 6자리 방 ID 생성 (원하는 형식으로 수정 가능)
-  return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-async function createRoom() {
-  await startLocalStream();
-
-  roomId = generateRoomId();
-  roomIdDisplay.textContent = roomId;
-  roomRef = ref(db, 'rooms/' + roomId);
-  chatRef = ref(db, 'chats/' + roomId);
-
-  peerConnection = new RTCPeerConnection(servers);
-  isCaller = true;
-
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-  registerPeerConnectionListeners();
-
-  peerConnection.onicecandidate = event => {
-    if (event.candidate) {
-      push(child(roomRef, 'callerCandidates'), event.candidate.toJSON());
+    function generateRoomId() {
+      return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
-  };
 
-  peerConnection.ontrack = event => {
-    remoteVideo.srcObject = event.streams[0];
-  };
-
-  const offer = await peerConnection.createOffer();
-  await peerConnection.setLocalDescription(offer);
-
-  await set(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
-
-  onValue(child(roomRef, 'answer'), async snapshot => {
-    const answer = snapshot.val();
-    if (answer && !peerConnection.currentRemoteDescription) {
-      const rtcAnswer = new RTCSessionDescription(answer);
-      await peerConnection.setRemoteDescription(rtcAnswer);
+    function scrollChatToBottom() {
+      chatDiv.scrollTop = chatDiv.scrollHeight;
     }
-  });
 
-  onChildAdded(child(roomRef, 'calleeCandidates'), snapshot => {
-    const candidate = new RTCIceCandidate(snapshot.val());
-    peerConnection.addIceCandidate(candidate);
-  });
+    async function createRoom() {
+      roomId = generateRoomId();
+      roomIdDisplay.textContent = roomId;
 
-  // 채팅 수신
-  onChildAdded(chatRef, snapshot => {
-    const { name, msg } = snapshot.val();
-    chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-  });
+      chatRef = ref(db, 'chats/' + roomId);
+      alert(`방이 생성되었습니다. 방 ID: ${roomId}`);
 
-  createBtn.disabled = true;
-  joinBtn.disabled = true;
-  joinRoomInput.disabled = true;
-}
-
-async function joinRoom() {
-  const inputRoomId = joinRoomInput.value.trim();
-  if (!inputRoomId) {
-    alert("입장할 방 ID를 입력하세요.");
-    return;
-  }
-
-  await startLocalStream();
-
-  roomId = inputRoomId.toUpperCase();
-  roomIdDisplay.textContent = roomId;
-  roomRef = ref(db, 'rooms/' + roomId);
-  chatRef = ref(db, 'chats/' + roomId);
-
-  const roomSnapshot = await get(roomRef);
-  if (!roomSnapshot.exists()) {
-    alert("해당 방이 없습니다.");
-    return;
-  }
-
-  peerConnection = new RTCPeerConnection(servers);
-  isCaller = false;
-
-  localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-  registerPeerConnectionListeners();
-
-  peerConnection.onicecandidate = event => {
-    if (event.candidate) {
-      push(child(roomRef, 'calleeCandidates'), event.candidate.toJSON());
+      listenToChat();
+      createBtn.disabled = true;
+      joinBtn.disabled = true;
+      joinRoomInput.disabled = true;
     }
-  };
 
-  peerConnection.ontrack = event => {
-    remoteVideo.srcObject = event.streams[0];
-  };
+    async function joinRoom() {
+      const inputRoomId = joinRoomInput.value.trim();
+      if (!inputRoomId) {
+        alert("입장할 방 ID를 입력하세요.");
+        return;
+      }
 
-  const offer = roomSnapshot.val().offer;
-  await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+      const targetRoom = inputRoomId.toUpperCase();
+      const roomExists = await get(ref(db, 'chats/' + targetRoom));
 
-  const answer = await peerConnection.createAnswer();
-  await peerConnection.setLocalDescription(answer);
+      if (!roomExists.exists()) {
+        alert("해당 방이 존재하지 않습니다.");
+        return;
+      }
 
-  await update(roomRef, { answer: { type: answer.type, sdp: answer.sdp } });
+      roomId = targetRoom;
+      roomIdDisplay.textContent = roomId;
+      chatRef = ref(db, 'chats/' + roomId);
 
-  onChildAdded(child(roomRef, 'callerCandidates'), snapshot => {
-    const candidate = new RTCIceCandidate(snapshot.val());
-    peerConnection.addIceCandidate(candidate);
-  });
+      alert(`방 '${roomId}'에 입장하였습니다.`);
+      listenToChat();
 
-  // 채팅 수신
-  onChildAdded(chatRef, snapshot => {
-    const { name, msg } = snapshot.val();
-    chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
-    chatDiv.scrollTop = chatDiv.scrollHeight;
-  });
+      createBtn.disabled = true;
+      joinBtn.disabled = true;
+      joinRoomInput.disabled = true;
+    }
 
-  createBtn.disabled = true;
-  joinBtn.disabled = true;
-  joinRoomInput.disabled = true;
-}
+    function listenToChat() {
+      onChildAdded(chatRef, snapshot => {
+        const { name, msg } = snapshot.val();
+        chatDiv.innerHTML += `<div><b>${name}:</b> ${msg}</div>`;
+        scrollChatToBottom();
+      });
+    }
 
-function registerPeerConnectionListeners() {
-  peerConnection.onconnectionstatechange = () => {
-    console.log('Connection state:', peerConnection.connectionState);
-  };
-}
+    sendBtn.onclick = () => {
+      if (!chatRef) {
+        alert("방에 먼저 입장하거나 생성하세요.");
+        return;
+      }
 
-createBtn.onclick = createRoom;
-joinBtn.onclick = joinRoom;
+      const name = prompt("이름을 입력하세요") || "익명";
+      const msg = input.value.trim();
+      if (msg) {
+        push(chatRef, { name, msg });
+        input.value = '';
+      }
+    };
 
-sendBtn.onclick = () => {
-  if (!chatRef) {
-    alert("방에 먼저 입장해주세요.");
-    return;
-  }
-  const name = prompt("이름을 입력하세요") || "익명";
-  const msg = input.value.trim();
-  if (msg) {
-    push(chatRef, { name, msg });
-    input.value = '';
-  }
-};
-</script>
+    createBtn.onclick = createRoom;
+    joinBtn.onclick = joinRoom;
+  </script>
 </body>
 </html>
