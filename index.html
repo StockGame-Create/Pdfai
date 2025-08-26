@@ -1,44 +1,40 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Firebase 채팅 - 방 생성/입장</title>
+  <meta charset="UTF-8">
+  <title>Realtime Chat App</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <style>
-    #chat {
-      width: 90%;
-      height: 300px;
-      border: 1px solid #ccc;
-      overflow-y: auto;
-      margin: 10px auto;
-      padding: 5px;
-    }
-    #input, #sendBtn { font-size: 1rem; }
-    #input { width: 75%; }
+    body { font-family: sans-serif; padding: 20px; }
+    #chat { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-top: 10px; }
+    .message { margin-bottom: 5px; }
+    #rooms { margin-top: 20px; }
   </style>
 </head>
 <body>
-  <h2>Firebase 채팅</h2>
 
-  <button id="createBtn">방 생성</button>
-  <input id="joinRoomInput" placeholder="입장할 방 ID 입력" />
-  <button id="joinBtn">방 입장</button>
-  <p>현재 방 ID: <span id="roomIdDisplay">없음</span></p>
+  <h2>Realtime Chat App</h2>
 
-  <div id="chat"></div>
-  <input id="input" placeholder="메시지 입력" />
-  <button id="sendBtn">전송</button>
+  <div>
+    <input type="text" id="roomName" placeholder="방 이름 입력">
+    <button onclick="createRoom()">방 만들기</button>
+  </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-    import {
-      getDatabase,
-      ref,
-      set,
-      push,
-      get,
-      onChildAdded
-    } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  <div id="rooms">
+    <h3>방 목록</h3>
+    <ul id="roomList"></ul>
+  </div>
 
+  <div id="chatSection" style="display:none;">
+    <h3 id="currentRoomTitle"></h3>
+    <div id="chat"></div>
+    <input type="text" id="messageInput" placeholder="메시지 입력">
+    <button onclick="sendMessage()">보내기</button>
+  </div>
+
+  <script>
+    // ✅ Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyD9qLLToWFFiMKsUNH-DxPLj-ceFVP8Rxg",
       authDomain: "amazi-6de63.firebaseapp.com",
@@ -50,99 +46,75 @@
       measurementId: "G-DT4JLH8QEC"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    // ✅ Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    const createBtn = document.getElementById('createBtn');
-    const joinBtn = document.getElementById('joinBtn');
-    const joinRoomInput = document.getElementById('joinRoomInput');
-    const roomIdDisplay = document.getElementById('roomIdDisplay');
-    const chatDiv = document.getElementById('chat');
-    const input = document.getElementById('input');
-    const sendBtn = document.getElementById('sendBtn');
+    // 현재 선택된 방 이름
+    let currentRoom = null;
 
-    let chatRef = null;
-    let roomId = null;
+    // ✅ 방 만들기
+    function createRoom() {
+      const roomName = document.getElementById("roomName").value.trim();
+      if (roomName === "") return alert("방 이름을 입력해주세요");
 
-    function generateRoomId() {
-      return Math.random().toString(36).substring(2, 8).toUpperCase();
+      db.ref("rooms/" + roomName).set({ createdAt: Date.now() });
+      document.getElementById("roomName").value = "";
     }
 
-    function scrollChatToBottom() {
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
+    // ✅ 방 목록 실시간 갱신
+    db.ref("rooms").on("value", snapshot => {
+      const rooms = snapshot.val();
+      const roomList = document.getElementById("roomList");
+      roomList.innerHTML = "";
 
-    async function createRoom() {
-      roomId = generateRoomId();
-      roomIdDisplay.textContent = roomId;
-
-      const roomRef = ref(db, 'rooms/' + roomId);
-      const chatPath = 'chats/' + roomId;
-      chatRef = ref(db, chatPath);
-
-      // ✅ 방 정보를 rooms/{roomId}에 등록
-      await set(roomRef, {
-        createdAt: Date.now()
-      });
-
-      alert(`방이 생성되었습니다. 방 ID: ${roomId}`);
-      listenToChat();
-      createBtn.disabled = true;
-      joinBtn.disabled = true;
-      joinRoomInput.disabled = true;
-    }
-
-    async function joinRoom() {
-      const inputRoomId = joinRoomInput.value.trim().toUpperCase();
-      if (!inputRoomId) {
-        alert("입장할 방 ID를 입력하세요.");
-        return;
+      for (let room in rooms) {
+        const li = document.createElement("li");
+        li.textContent = room;
+        li.style.cursor = "pointer";
+        li.onclick = () => enterRoom(room);
+        roomList.appendChild(li);
       }
+    });
 
-      const roomSnap = await get(ref(db, 'rooms/' + inputRoomId));
-      if (!roomSnap.exists()) {
-        alert("❌ 해당 방이 존재하지 않습니다.");
-        return;
-      }
-
-      roomId = inputRoomId;
-      roomIdDisplay.textContent = roomId;
-      chatRef = ref(db, 'chats/' + roomId);
-
-      alert(`방 '${roomId}'에 입장하였습니다.`);
-      listenToChat();
-
-      createBtn.disabled = true;
-      joinBtn.disabled = true;
-      joinRoomInput.disabled = true;
+    // ✅ 방 입장
+    function enterRoom(roomName) {
+      currentRoom = roomName;
+      document.getElementById("chatSection").style.display = "block";
+      document.getElementById("currentRoomTitle").innerText = `채팅방: ${roomName}`;
+      listenForMessages();
     }
 
-    function listenToChat() {
-      onChildAdded(chatRef, snapshot => {
-        const val = snapshot.val();
-        if (val && val.name && val.msg) {
-          chatDiv.innerHTML += `<div><b>${val.name}:</b> ${val.msg}</div>`;
-          scrollChatToBottom();
-        }
+    // ✅ 메시지 전송
+    function sendMessage() {
+      const message = document.getElementById("messageInput").value.trim();
+      if (message === "") return;
+
+      const msgData = {
+        text: message,
+        timestamp: Date.now()
+      };
+
+      db.ref(`messages/${currentRoom}`).push(msgData);
+      document.getElementById("messageInput").value = "";
+    }
+
+    // ✅ 메시지 실시간 수신
+    function listenForMessages() {
+      const chat = document.getElementById("chat");
+      chat.innerHTML = "";
+
+      db.ref(`messages/${currentRoom}`).off(); // 기존 리스너 제거
+      db.ref(`messages/${currentRoom}`).on("child_added", snapshot => {
+        const msg = snapshot.val();
+        const div = document.createElement("div");
+        div.className = "message";
+        div.textContent = msg.text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
       });
     }
-
-    sendBtn.onclick = () => {
-      if (!chatRef) {
-        alert("방을 먼저 생성하거나 입장하세요.");
-        return;
-      }
-
-      const name = prompt("이름을 입력하세요") || "익명";
-      const msg = input.value.trim();
-      if (msg) {
-        push(chatRef, { name, msg });
-        input.value = '';
-      }
-    };
-
-    createBtn.onclick = createRoom;
-    joinBtn.onclick = joinRoom;
   </script>
+
 </body>
 </html>
