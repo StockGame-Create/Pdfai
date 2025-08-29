@@ -431,6 +431,222 @@
       color: #333;
     }
 
+    
+    /* 피드 스타일 */
+    .feed-container {
+      width: 100%;
+      max-width: 600px;
+      background-color: rgba(0,0,0,0.5);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      margin-top: 20px;
+      animation: fadeIn 0.6s ease-out;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .feed-search {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 25px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 16px;
+    }
+
+    .feed-search::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .feed-post {
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      animation: popIn 0.3s ease;
+    }
+
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .post-author {
+      font-weight: bold;
+      color: #00ffd5;
+    }
+
+    .post-time {
+      font-size: 0.8em;
+      color: rgba(255,255,255,0.7);
+    }
+
+    .post-content {
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .post-image {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+
+    .post-hashtags {
+      margin-bottom: 15px;
+    }
+
+    .hashtag {
+      color: #6366f1;
+      background-color: rgba(99, 102, 241, 0.2);
+      padding: 4px 8px;
+      border-radius: 12px;
+      margin-right: 8px;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .hashtag:hover {
+      background-color: rgba(99, 102, 241, 0.3);
+    }
+
+    .post-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 15px;
+    }
+
+    .action-button {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.8);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 15px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .action-button:hover {
+      background-color: rgba(255,255,255,0.1);
+      transform: none;
+    }
+
+    .action-button.liked {
+      color: #ff4757;
+    }
+
+    .post-comments {
+      margin-top: 15px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 15px;
+    }
+
+    .comment {
+      background-color: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .comment-author {
+      font-weight: bold;
+      color: #00ffd5;
+      margin-bottom: 5px;
+    }
+
+    .comment-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      margin-top: 10px;
+    }
+
+    .comment-input::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .create-post-form {
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 30px;
+      border: 2px dashed rgba(255,255,255,0.3);
+    }
+
+    .post-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      resize: vertical;
+      margin-bottom: 15px;
+    }
+
+    .post-textarea::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .hashtag-input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      margin-bottom: 15px;
+    }
+
+    .hashtag-input::placeholder {
+      color: rgba(255,255,255,0.7);
+    }
+
+    .file-upload-area {
+      border: 2px dashed rgba(255,255,255,0.5);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .file-upload-area:hover {
+      border-color: rgba(255,255,255,0.8);
+      background-color: rgba(255,255,255,0.05);
+    }
+
+    .file-upload-area.dragover {
+      border-color: #6366f1;
+      background-color: rgba(99, 102, 241, 0.1);
+    }
+
+    .preview-image {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
@@ -461,13 +677,45 @@
   </div>
 
   <!-- 방 만들기 및 목록 -->
-  <div id="roomSection" style="display:none;">
-    <input type="text" id="roomName" placeholder="방 이름 입력">
-    <input type="password" id="roomPassword" placeholder="비밀번호 (선택사항)">
-    <button onclick="createRoom()">방 만들기</button>
-    <h3>  ※방 목록  </h3>
-    <ul id="roomList"></ul>
+<!-- 방 만들기 및 목록 -->
+<div id="roomSection" style="display:none;">
+  <input type="text" id="roomName" placeholder="방 이름 입력">
+  <input type="password" id="roomPassword" placeholder="비밀번호 (선택사항)">
+  <button onclick="createRoom()">방 만들기</button>
+  <button onclick="showFeed()" class="success-btn">🌍 글로벌 피드</button>
+  <h3>  ※방 목록  </h3>
+  <ul id="roomList"></ul>
+</div>
+
+<!-- 글로벌 피드 화면 -->
+<div id="feedSection" style="display:none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h3>🌍 글로벌 피드</h3>
+    <button onclick="hideFeed()" class="danger-btn">뒤로가기</button>
   </div>
+  
+  <div class="feed-container">
+    <input type="text" id="feedSearch" class="feed-search" placeholder="해시태그로 검색... (#예시)" onkeyup="searchPosts()">
+    
+    <!-- 게시물 작성 폼 -->
+    <div class="create-post-form">
+      <h4>새 게시물 작성</h4>
+      <textarea id="postContent" class="post-textarea" placeholder="무슨 일이 일어나고 있나요?"></textarea>
+      <input type="text" id="postHashtags" class="hashtag-input" placeholder="해시태그 입력 (예: #일상 #음식)">
+      
+      <div class="file-upload-area" onclick="document.getElementById('postImageFile').click()">
+        <input type="file" id="postImageFile" accept="image/*" style="display:none;" onchange="previewPostImage()">
+        <p>📷 사진 업로드 (필수)</p>
+        <img id="postImagePreview" class="preview-image" style="display:none;">
+      </div>
+      
+      <button onclick="createPost()" class="success-btn">게시물 올리기</button>
+    </div>
+    
+    <!-- 피드 게시물들 -->
+    <div id="feedPosts"></div>
+  </div>
+</div>
 
   <!-- 채팅 화면 -->
   <div id="chatSection" style="display:none;">
@@ -580,17 +828,17 @@
     </div>
   </div>
 
-  <!-- 퀴즈 참여 모달 -->
-  <div id="quizParticipateModal" class="modal">
-    <div class="modal-content">
-      <span class="close" onclick="closeQuizParticipate()">&times;</span>
-      <h3>퀴즈 풀기</h3>
-      <div id="quizContent" class="quiz-container">
-        <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
-      </div>
-      <button onclick="submitQuizAnswer()" class="success-btn">답안 제출</button>
+<!-- 퀴즈 참여 모달 -->
+<div id="quizParticipateModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeQuizParticipate()">&times;</span>
+    <h3>퀴즈 풀기</h3>
+    <div id="quizContent" class="quiz-container">
+      <!-- 퀴즈 내용이 여기에 동적으로 생성됩니다 -->
     </div>
+    <button onclick="submitQuizAnswer()" class="success-btn">답안 제출</button>
   </div>
+</div>
 
   <script>
     const firebaseConfig = {
@@ -1347,6 +1595,266 @@
     document.getElementById('drawingModal').addEventListener('touchmove', function(e) {
       e.preventDefault();
     }, { passive: false });
+
+    // 피드 관련 함수들
+function showFeed() {
+  document.getElementById("roomSection").style.display = "none";
+  document.getElementById("feedSection").style.display = "block";
+  loadFeedPosts();
+}
+
+function hideFeed() {
+  document.getElementById("feedSection").style.display = "none";
+  document.getElementById("roomSection").style.display = "block";
+  // 폼 초기화
+  document.getElementById("postContent").value = "";
+  document.getElementById("postHashtags").value = "";
+  document.getElementById("postImagePreview").style.display = "none";
+  selectedPostImage = null;
+}
+
+function previewPostImage() {
+  const file = document.getElementById('postImageFile').files[0];
+  if (file) {
+    // 파일 크기 체크 (예: 1MB 제한)
+    if (file.size > 1024 * 1024) {
+      alert("이미지 크기가 너무 큽니다. 1MB 이하의 이미지를 선택해주세요.");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const preview = document.getElementById('postImagePreview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      selectedPostImage = e.target.result; // base64 문자열로 저장
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function createPost() {
+  const content = document.getElementById("postContent").value.trim();
+  const hashtags = document.getElementById("postHashtags").value.trim();
+  
+  if (!content) {
+    alert("게시물 내용을 입력해주세요.");
+    return;
+  }
+  
+  if (!hashtags) {
+    alert("최소 하나의 해시태그를 입력해주세요.");
+    return;
+  }
+  
+  if (!selectedPostImage) {
+    alert("사진을 업로드해주세요.");
+    return;
+  }
+  
+  try {
+    // 해시태그 처리
+    const hashtagArray = hashtags.split(' ').filter(tag => tag.trim()).map(tag => 
+      tag.startsWith('#') ? tag : '#' + tag
+    );
+    
+    // 게시물 데이터 생성 (이미지를 base64로 직접 저장)
+    const postData = {
+      content: content,
+      imageData: selectedPostImage, // base64 이미지 데이터
+      hashtags: hashtagArray,
+      author: username,
+      timestamp: Date.now(),
+      likes: {},
+      comments: {}
+    };
+    
+    // Firebase Realtime Database에 저장
+    await db.ref('globalFeed').push(postData);
+    
+    // 폼 초기화
+    document.getElementById("postContent").value = "";
+    document.getElementById("postHashtags").value = "";
+    document.getElementById("postImagePreview").style.display = "none";
+    document.getElementById('postImageFile').value = "";
+    selectedPostImage = null;
+    
+    alert("게시물이 성공적으로 업로드되었습니다!");
+    
+  } catch (error) {
+    console.error("게시물 업로드 오류:", error);
+    alert("게시물 업로드에 실패했습니다.");
+  }
+}
+
+function loadFeedPosts() {
+  db.ref('globalFeed').orderByChild('timestamp').on('value', snapshot => {
+    allPosts = [];
+    const posts = snapshot.val();
+    
+    if (posts) {
+      for (let postId in posts) {
+        allPosts.push({
+          id: postId,
+          ...posts[postId]
+        });
+      }
+    }
+    
+    // 최신순으로 정렬
+    allPosts.sort((a, b) => b.timestamp - a.timestamp);
+    displayPosts(allPosts);
+  });
+}
+
+function displayPosts(posts) {
+  const feedPosts = document.getElementById('feedPosts');
+  feedPosts.innerHTML = '';
+  
+  posts.forEach(post => {
+    const postElement = createPostElement(post);
+    feedPosts.appendChild(postElement);
+  });
+}
+
+function createPostElement(post) {
+  const postDiv = document.createElement('div');
+  postDiv.className = 'feed-post';
+  
+  const likesCount = post.likes ? Object.keys(post.likes).length : 0;
+  const commentsCount = post.comments ? Object.keys(post.comments).length : 0;
+  const isLiked = post.likes && post.likes[username];
+  
+  postDiv.innerHTML = `
+    <div class="post-header">
+      <span class="post-author">${post.author}</span>
+      <span class="post-time">${formatTime(post.timestamp)}</span>
+    </div>
+    <div class="post-content">${post.content}</div>
+    <img src="${post.imageData}" alt="Post image" class="post-image">
+    <div class="post-hashtags">
+      ${post.hashtags.map(tag => `<span class="hashtag" onclick="searchByHashtag('${tag}')">${tag}</span>`).join('')}
+    </div>
+    <div class="post-actions">
+      <button class="action-button ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
+        ❤️ ${likesCount}
+      </button>
+      <button class="action-button" onclick="toggleComments('${post.id}')">
+        💬 ${commentsCount}
+      </button>
+    </div>
+    <div id="comments-${post.id}" class="post-comments" style="display:none;">
+      <div id="comments-list-${post.id}"></div>
+      <input type="text" class="comment-input" placeholder="댓글을 입력하세요..." 
+             onkeypress="if(event.key==='Enter') addComment('${post.id}', this.value)">
+    </div>
+  `;
+  
+  return postDiv;
+}
+
+function formatTime(timestamp) {
+  const now = Date.now();
+  const diff = now - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return '방금 전';
+  if (minutes < 60) return `${minutes}분 전`;
+  if (hours < 24) return `${hours}시간 전`;
+  return `${days}일 전`;
+}
+
+async function toggleLike(postId) {
+  const likeRef = db.ref(`globalFeed/${postId}/likes/${username}`);
+  
+  try {
+    const snapshot = await likeRef.once('value');
+    if (snapshot.exists()) {
+      await likeRef.remove();
+    } else {
+      await likeRef.set(true);
+    }
+  } catch (error) {
+    console.error("좋아요 토글 오류:", error);
+  }
+}
+
+function toggleComments(postId) {
+  const commentsDiv = document.getElementById(`comments-${postId}`);
+  const commentsList = document.getElementById(`comments-list-${postId}`);
+  
+  if (commentsDiv.style.display === 'none') {
+    commentsDiv.style.display = 'block';
+    loadComments(postId);
+  } else {
+    commentsDiv.style.display = 'none';
+  }
+}
+
+function loadComments(postId) {
+  const commentsList = document.getElementById(`comments-list-${postId}`);
+  
+  db.ref(`globalFeed/${postId}/comments`).on('value', snapshot => {
+    const comments = snapshot.val();
+    commentsList.innerHTML = '';
+    
+    if (comments) {
+      for (let commentId in comments) {
+        const comment = comments[commentId];
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'comment';
+        commentDiv.innerHTML = `
+          <div class="comment-author">${comment.author}</div>
+          <div>${comment.text}</div>
+        `;
+        commentsList.appendChild(commentDiv);
+      }
+    }
+  });
+}
+
+async function addComment(postId, commentText) {
+  if (!commentText.trim()) return;
+  
+  const commentData = {
+    text: commentText.trim(),
+    author: username,
+    timestamp: Date.now()
+  };
+  
+  try {
+    await db.ref(`globalFeed/${postId}/comments`).push(commentData);
+    // 입력창 초기화
+    event.target.value = '';
+  } catch (error) {
+    console.error("댓글 추가 오류:", error);
+    alert("댓글 추가에 실패했습니다.");
+  }
+}
+
+function searchPosts() {
+  const searchTerm = document.getElementById('feedSearch').value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    displayPosts(allPosts);
+    return;
+  }
+  
+  const filteredPosts = allPosts.filter(post => {
+    return post.hashtags.some(hashtag => 
+      hashtag.toLowerCase().includes(searchTerm.replace('#', ''))
+    );
+  });
+  
+  displayPosts(filteredPosts);
+}
+
+function searchByHashtag(hashtag) {
+  document.getElementById('feedSearch').value = hashtag;
+  searchPosts();
+}
 
   </script>
 
