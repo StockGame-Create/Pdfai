@@ -33,6 +33,35 @@
       --blur: 20px;
     }
 
+h2 {
+  font-size: 2.8em;
+  font-weight: 900;
+  text-transform: uppercase;
+  text-align: center;
+  background: linear-gradient(
+    -45deg,
+    #ff6ec4,
+    #7873f5,
+    #42e695,
+    #ff6ec4
+  );
+  background-size: 300% 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: flashyDiagonal 6s ease-in-out infinite;
+  letter-spacing: 3px;
+  text-shadow: 0 0 20px rgba(255,255,255,0.3), 
+               0 0 40px rgba(0,0,0,0.2);
+}
+
+@keyframes flashyDiagonal {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+
+
     * {
       margin: 0;
       padding: 0;
@@ -151,24 +180,29 @@
       height: calc(100vh - 200px);
     }
 
-    .message {
-      margin-bottom: 15px;
-      padding: 10px 15px;
-      background-color: rgba(255,255,255,0.2);
-      border-radius: 10px;
-      animation: popIn 0.3s ease;
-    }
+.message {
+  margin-bottom: 15px;
+  padding: 10px 15px;
+  background-color: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  animation: popIn 0.3s ease;
+  white-space: pre-line;
+  text-indent: -40px; /* 첫 줄을 왼쪽으로 내밀기 */
+  padding-left: 50px; /* 전체 텍스트를 오른쪽으로 밀기 */
+}
 
-    .message strong {
-      color: #00ffd5;
-    }
+.message strong {
+  color: #00ffd5;
+}
 
-    .message img {
-      max-width: 100%;
-      margin-top: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    }
+.message img {
+  max-width: 450px; /* 현재 100%에서 고정 크기로 */
+  max-height: 500px;
+  margin-top: 10px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  object-fit: cover;
+}
 
     .quiz-message {
       background-color: rgba(255, 165, 0, 0.3);
@@ -230,6 +264,53 @@
       max-height: 90vh;
       overflow-y: auto;
     }
+
+#messageInput {
+  width: 100%;
+  min-height: 25px;
+  max-height: 60px;
+  padding: 15px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 25px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  resize: none;
+  overflow-y: auto;
+  outline: none;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+#messageInput::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+#messageInput:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(255,255,255,0.12);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+#messageInput::-webkit-scrollbar {
+  width: 6px;
+}
+
+#messageInput::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#messageInput::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.3);
+  border-radius: 10px;
+}
+
+#messageInput::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.5);
+}
+
 
     /* 모바일에서 그림판 고정 */
     @media (max-width: 768px) {
@@ -368,7 +449,7 @@
 
     /* 퀴즈 스타일 */
     .quiz-container {
-      background-color: #ffffff;
+      background-color: #000000;
       padding: 20px;
       border-radius: 10px;
       margin: 10px 0;
@@ -492,12 +573,16 @@
       line-height: 1.5;
     }
 
-    .post-image {
-      width: 100%;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    }
+.post-image {
+  width: 100%;
+  max-width: 400px;
+  max-height: 300px;
+  border-radius: 10px;
+  margin: 0 auto 15px auto; /* 좌우 중앙 정렬 + 아래쪽 여백 */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  object-fit: cover;
+  display: block; /* 블록 요소로 만들어야 margin auto가 작동 */
+}
 
     .post-hashtags {
       margin-bottom: 15px;
@@ -640,12 +725,13 @@
       background-color: rgba(99, 102, 241, 0.1);
     }
 
-    .preview-image {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
+.preview-image {
+  max-width: 100%;
+  max-height: 150px; /* 현재 200px에서 줄임 */
+  border-radius: 10px;
+  margin-top: 10px;
+  object-fit: cover;
+}
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(20px); }
@@ -668,7 +754,7 @@
 <body>
 
   <h2>💬 Unvul Chat !!</h2>
-  <h2>(Made by 범서) Ver. 2.31</h2>
+  <h3>(Made by 범서) Ver. 2.64</h3>
 
   <!-- 사용자 이름 -->
   <div id="nameSection">
@@ -724,7 +810,8 @@
       <button onclick="toggleFullscreen()" id="fullscreenBtn">🔍 확대</button>
     </div>
     <div id="chat"></div>
-    <input type="text" id="messageInput" placeholder="메시지 입력">
+<textarea id="messageInput" placeholder="메시지 입력 (Shift+Enter로 전송)" rows="3"></textarea>
+<button onclick="sendMessage()">전송</button>
     <button onclick="openCamera()">*사진촬영*</button>
     <button onclick="openDrawingBoard()">🎨 그림판</button>
     <button onclick="openQuizModal()">-퀴즈 출제-</button>
@@ -1039,24 +1126,38 @@
       }, 'image/jpeg', 0.8);
     }
 
-    async function sendMessage() {
-      const messageText = document.getElementById("messageInput").value.trim();
-      if (messageText === "") return;
+async function sendMessage() {
+  const messageText = document.getElementById("messageInput").value.trim();
+  if (messageText === "") return;
 
-      const msgData = {
-        text: messageText,
-        sender: username,
-        timestamp: Date.now()
-      };
+  const msgData = {
+    text: messageText,
+    sender: username,
+    timestamp: Date.now()
+  };
 
-      try {
-        await db.ref(`messages/${currentRoom}`).push(msgData);
-        document.getElementById("messageInput").value = "";
-      } catch (error) {
-        console.error("메시지 전송 오류:", error);
-        alert("메시지 전송에 실패했습니다.");
-      }
+  try {
+    await db.ref(`messages/${currentRoom}`).push(msgData);
+    document.getElementById("messageInput").value = "";
+  } catch (error) {
+    console.error("메시지 전송 오류:", error);
+    alert("메시지 전송에 실패했습니다.");
+  }
+}
+
+// 이벤트 리스너는 별도로 분리 (스크립트 맨 아래쪽에 추가)
+document.getElementById('messageInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    if (e.shiftKey) {
+      // Shift + Enter: 줄바꿈 허용 (기본 동작)
+      return;
+    } else {
+      // Enter만: 메시지 전송
+      e.preventDefault();
+      sendMessage();
     }
+  }
+});
 
     function listenForMessages() {
       const chat = document.getElementById("chat");
@@ -1082,7 +1183,8 @@
           div.innerHTML = `<strong>📊 퀴즈 결과 발표</strong><br>${msg.text}`;
         } else {
           div.className = "message";
-          div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text}`;
+          // 현재 코드
+        div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text.replace(/\n/g, '<br>')}`;
           
           if (msg.image) {
             const img = document.createElement("img");
@@ -1580,16 +1682,11 @@
       });
     }
 
-    // Enter 키로 메시지 보내기
-    document.addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        if (document.getElementById('messageInput') === document.activeElement) {
-          sendMessage();
-        } else if (document.getElementById('roomPasswordInput') === document.activeElement) {
-          checkPassword();
-        }
-      }
-    });
+document.getElementById('roomPasswordInput').addEventListener('keypress', function(e) {
+  if (e.key === 'Enter') {
+    checkPassword();
+  }
+});
 
     // 모바일에서 body 스크롤 방지 (그림판 사용시)
     document.getElementById('drawingModal').addEventListener('touchmove', function(e) {
@@ -1617,8 +1714,8 @@ function previewPostImage() {
   const file = document.getElementById('postImageFile').files[0];
   if (file) {
     // 파일 크기 체크 (예: 1MB 제한)
-    if (file.size > 1024 * 1024) {
-      alert("이미지 크기가 너무 큽니다. 1MB 이하의 이미지를 선택해주세요.");
+    if (file.size > 2.5 * 1024 * 1024) {
+      alert("이미지 크기가 너무 큽니다. 2.5MB 이하의 이미지를 선택해주세요.");
       return;
     }
     
