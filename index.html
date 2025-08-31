@@ -921,6 +921,7 @@ h2 {
         <option value="bug">사이트 버그, 수정사항</option>
         <option value="password">방 비밀번호 또는 금지어 설정 비밀번호를 까먹음</option>
         <option value="report">욕설, 성적 불쾌감, 따돌림 신고</option>
+        <option value="idea">아이디어 제시</option>
       </select>
       
       <textarea id="inquiryContent" class="post-textarea" placeholder="문의 내용을 자세히 입력해주세요..."></textarea>
@@ -2585,7 +2586,8 @@ function getInquiryTypeText(type) {
   switch(type) {
     case 'bug': return '사이트 버그, 수정사항';
     case 'password': return '비밀번호 분실';
-    case 'report': return '신고';
+    case 'report': return '욕설/폭력 신고';
+    case 'idea': return '아이디어';
     default: return '기타';
   }
 }
