@@ -33,6 +33,26 @@
       --blur: 20px;
     }
 
+
+    #roomSearch {
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1em;
+}
+
+#roomSearch::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+#roomSearch:focus {
+  border-color: rgba(99, 102, 241, 0.5);
+  background: rgba(255,255,255,0.15);
+  outline: none;
+}
+
 h2 {
   font-size: 2.8em;
   font-weight: 900;
@@ -154,6 +174,8 @@ h2 {
       animation: fadeIn 0.6s ease-out;
     }
 
+    
+
     #chatSection.fullscreen {
       position: fixed;
       top: 0;
@@ -187,8 +209,8 @@ h2 {
   border-radius: 10px;
   animation: popIn 0.3s ease;
   white-space: pre-line;
-  text-indent: -40px; /* 첫 줄을 왼쪽으로 내밀기 */
-  padding-left: 50px; /* 전체 텍스트를 오른쪽으로 밀기 */
+  text-indent: -40px;
+  padding-left: 50px;
 }
 
 .message strong {
@@ -196,12 +218,25 @@ h2 {
 }
 
 .message img {
-  max-width: 450px; /* 현재 100%에서 고정 크기로 */
+  max-width: 450px;
   max-height: 500px;
   margin-top: 10px;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   object-fit: cover;
+  display: block; /* 블록 요소로 설정 */
+  white-space: normal; /* 줄바꿈 영향 제거 */
+}
+
+.message:has(img) {
+  white-space: normal; /* 이미지 있는 메시지는 일반 줄바꿈 */
+}
+
+/* 브라우저 호환성을 위한 대안 */
+.message.has-image {
+  white-space: normal !important;
+  text-indent: 0;
+  padding-left: 15px;
 }
 
     .quiz-message {
@@ -575,8 +610,8 @@ h2 {
 
 .post-image {
   width: 100%;
-  max-width: 400px;
-  max-height: 300px;
+  max-width: 500px;
+  max-height: 400px;
   border-radius: 10px;
   margin: 0 auto 15px auto; /* 좌우 중앙 정렬 + 아래쪽 여백 */
   box-shadow: 0 4px 15px rgba(0,0,0,0.3);
@@ -749,12 +784,55 @@ h2 {
         box-sizing: border-box;
       }
     }
+
+    /* 공유하기 버튼 (하단 고정) */
+#shareButton {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 35px;
+  height: 35px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8em;
+  color: rgba(255,255,255,0.6);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+}
+
+#shareButton:hover {
+  background: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.9);
+  transform: scale(1.1);
+}
+
+#qrCode {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  display: inline-block;
+  margin: 10px;
+}
+
+#shareLink {
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 5px;
+  padding: 10px;
+}
   </style>
 </head>
 <body>
 
   <h2>💬 Unvul Chat !!</h2>
-  <h3>(Made by 범서) Ver. 2.64</h3>
+  <h3>(Made by 범서) Ver. 3.25</h3>
 
   <!-- 사용자 이름 -->
   <div id="nameSection">
@@ -764,13 +842,39 @@ h2 {
 
   <!-- 방 만들기 및 목록 -->
 <!-- 방 만들기 및 목록 -->
+<!-- 방 만들기 및 목록 -->
 <div id="roomSection" style="display:none;">
   <input type="text" id="roomName" placeholder="방 이름 입력">
   <input type="password" id="roomPassword" placeholder="비밀번호 (선택사항)">
   <button onclick="createRoom()">방 만들기</button>
-  <button onclick="showFeed()" class="success-btn">🌍 글로벌 피드</button>
+  <button onclick="showFeed()" class="success-btn">글로벌 피드</button>
+  <button onclick="showInquiry()" style="background: linear-gradient(to right, #ffa500, #ff8c00);">문의하기</button>
+  
   <h3>  ※방 목록  </h3>
+  <input type="text" id="roomSearch" placeholder="방 이름으로 검색..." onkeyup="searchRooms()" style="width: 100%; margin-bottom: 15px;">
   <ul id="roomList"></ul>
+</div>
+
+<div id="shareButton" onclick="openShareModal()">♡</div>
+
+<!-- 공유하기 모달 -->
+<div id="shareModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeShareModal()">&times;</span>
+    <h3>공유해주셔서 감사합니다!</h3>
+    <p style="text-align: center; margin: 20px 0; color: #aaa;">
+      아래 QR 코드를 스캔하거나 링크를 복사해서 친구들에게 공유해보세요!
+    </p>
+    
+    <div style="text-align: center; margin: 20px 0;">
+      <div id="qrCode"></div>
+    </div>
+    
+    <div style="text-align: center;">
+      <input type="text" id="shareLink" readonly style="width: 80%; margin-bottom: 10px;" value="">
+      <button onclick="copyLink()" class="success-btn">링크 복사</button>
+    </div>
+  </div>
 </div>
 
 <!-- 글로벌 피드 화면 -->
@@ -803,6 +907,36 @@ h2 {
   </div>
 </div>
 
+<!-- 문의하기 화면 -->
+<div id="inquirySection" style="display:none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h3>📞 문의하기</h3>
+    <button onclick="hideInquiry()" class="danger-btn">뒤로가기</button>
+  </div>
+  
+  <div class="feed-container">
+    <div class="create-post-form">
+      <h4>문의 유형 선택</h4>
+      <select id="inquiryType" style="width: 100%; margin-bottom: 15px;">
+        <option value="bug">사이트 버그, 수정사항</option>
+        <option value="password">방 비밀번호 또는 금지어 설정 비밀번호를 까먹음</option>
+        <option value="report">욕설, 성적 불쾌감, 따돌림 신고</option>
+      </select>
+      
+      <textarea id="inquiryContent" class="post-textarea" placeholder="문의 내용을 자세히 입력해주세요..."></textarea>
+      <button onclick="submitInquiry()" class="success-btn">문의 제출</button>
+    </div>
+    
+    <!-- 관리자 확인용 -->
+    <div style="border-top: 2px solid rgba(255,255,255,0.2); padding-top: 20px; margin-top: 30px;">
+      <h4>관리자 확인</h4>
+      <input type="password" id="adminPassword" class="hashtag-input" placeholder="관리자 비밀번호 입력">
+      <button onclick="viewInquiries()" style="background: linear-gradient(to right, #dc3545, #c82333);">문의 내역 확인</button>
+    </div>
+    
+    <div id="inquiriesView" style="display:none; margin-top: 20px;"></div>
+  </div>
+</div>
   <!-- 채팅 화면 -->
   <div id="chatSection" style="display:none;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -812,9 +946,10 @@ h2 {
     <div id="chat"></div>
 <textarea id="messageInput" placeholder="메시지 입력" rows="3"></textarea>
 <button onclick="sendMessage()">전송</button>
-    <button onclick="openCamera()">*사진촬영*</button>
-    <button onclick="openDrawingBoard()">🎨 그림판</button>
+    <button onclick="openDrawingBoard()">-그림판-</button>
     <button onclick="openQuizModal()">-퀴즈 출제-</button>
+    <button onclick="openRandomModal()">랜덤 뽑기</button>
+    <button onclick="openBannedWordsModal()">금지어 관리</button>
     <button onclick="exitRoom()" class="danger-btn">나가기</button>
     <div id="quizResultButtons"></div>
   </div>
@@ -830,19 +965,7 @@ h2 {
     </div>
   </div>
 
-  <!-- 카메라 모달 -->
-  <div id="cameraModal">
-    <div class="modal-content">
-      <span class="close" onclick="closeCamera()">&times;</span>
-      <h3>사진 촬영</h3>
-      <video id="videoElement" autoplay></video>
-      <canvas id="photoCanvas" style="display:none;"></canvas>
-      <div>
-        <button id="captureButton" onclick="capturePhoto()">📸 촬영</button>
-        <button onclick="closeCamera()">취소</button>
-      </div>
-    </div>
-  </div>
+
 
   <!-- 그림판 모달 -->
   <div id="drawingModal" class="modal">
@@ -871,6 +994,63 @@ h2 {
       <canvas id="drawingCanvas" width="750" height="400"></canvas>
     </div>
   </div>
+
+  <!-- 랜덤 뽑기 모달 -->
+<div id="randomModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeRandomModal()">&times;</span>
+    <h3>🎲 랜덤 뽑기</h3>
+    <div class="quiz-create">
+      <select id="randomType">
+        <option value="race">경주</option>
+        <option value="beauty">외모</option>
+        <option value="lucky">행운의 주인공</option>
+      </select>
+      
+      <h4>참가자 목록 (최소 2명)</h4>
+      <div id="randomParticipants">
+        <input type="text" class="option-input" placeholder="참가자 1">
+        <input type="text" class="option-input" placeholder="참가자 2">
+      </div>
+      <button onclick="addRandomParticipant()">+ 참가자 추가</button>
+      <br><br>
+      <button onclick="startRandom()" class="success-btn">뽑기 시작</button>
+    </div>
+  </div>
+</div>
+
+<!-- 금지어 관리 모달 -->
+<div id="bannedWordsModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeBannedWordsModal()">&times;</span>
+    <h3>🚫 금지어 관리</h3>
+    
+    <!-- 현재 금지어 목록 -->
+    <div class="quiz-create">
+      <h4>현재 금지어 목록 (최대 10개)</h4>
+      <div id="bannedWordsList" style="margin-bottom: 20px;"></div>
+      
+      <!-- 새 금지어 추가 -->
+      <h4>새 금지어 추가</h4>
+      <input type="text" id="newBannedWord" class="question-input" placeholder="금지어 입력">
+      <input type="password" id="bannedWordPassword" class="question-input" placeholder="관리자 비밀번호 설정">
+      <button onclick="addBannedWord()" class="success-btn">금지어 추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- 금지어 삭제 확인 모달 -->
+<div id="removeBannedWordModal" class="password-modal">
+  <div class="password-modal-content">
+    <h3>🔒 금지어 삭제</h3>
+    <p id="removeWordText"></p>
+    <input type="password" id="removePasswordInput" placeholder="관리자 비밀번호 입력">
+    <button onclick="confirmRemoveBannedWord()">삭제하기</button>
+    <button onclick="closeRemoveBannedWordModal()">취소</button>
+  </div>
+</div>
+
+
 
   <!-- 퀴즈 출제 모달 -->
   <div id="quizModal" class="modal">
@@ -911,6 +1091,8 @@ h2 {
         
         <br>
         <button onclick="submitQuiz()" class="success-btn">퀴즈 출제</button>
+
+
       </div>
     </div>
   </div>
@@ -1130,6 +1312,18 @@ async function sendMessage() {
   const messageText = document.getElementById("messageInput").value.trim();
   if (messageText === "") return;
 
+    // 금지어 체크
+  const bannedWordsSnapshot = await db.ref(`bannedWords/${currentRoom}`).once("value");
+  const bannedWords = bannedWordsSnapshot.val() || {};
+  
+  for (let wordId in bannedWords) {
+    const bannedWord = bannedWords[wordId].word.toLowerCase();
+    if (messageText.toLowerCase().includes(bannedWord)) {
+      alert(`금지어 "${bannedWords[wordId].word}"가 포함되어 있습니다.`);
+      return;
+    }
+  }
+
   const msgData = {
     text: messageText,
     sender: username,
@@ -1181,26 +1375,65 @@ document.getElementById('messageInput').addEventListener('keydown', function(e) 
         } else if (msg.type === 'quiz-result') {
           div.className = "message quiz-message";
           div.innerHTML = `<strong>📊 퀴즈 결과 발표</strong><br>${msg.text}`;
+          // 기존 메시지 처리 부분에 추가
+        } else if (msg.type === 'random-start') {
+  div.className = "message quiz-message";
+  div.innerHTML = `
+    <strong>${msg.sender}님이 뽑기를 시작했습니다!</strong><br>
+    ${msg.text}<br>
+    <small>참가자: ${msg.participants.join(', ')}</small><br>
+    <div id="countdown-${snapshot.key}" style="font-size: 1.2em; margin-top: 10px;">⏰ 10초 후 결과 발표...</div>
+  `;
+  
+  // 카운트다운 시작
+  startCountdown(snapshot.key);
+} else if (msg.type === 'random-result') {
+  div.className = "message quiz-message";
+  div.innerHTML = `<strong>🎲 뽑기 결과</strong><br>${msg.text}`;
+
         } else {
-          div.className = "message";
-          // 현재 코드
-        div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text.replace(/\n/g, '<br>')}`;
-          
-          if (msg.image) {
-            const img = document.createElement("img");
-            img.src = msg.image;
-            img.onload = () => {
-              chat.scrollTop = chat.scrollHeight;
-            };
-            div.appendChild(img);
-          }
-        }
+  div.className = "message";
+  div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.text.replace(/\n/g, '<br>')}`;
+  
+  if (msg.image) {
+    div.classList.add('has-image'); // 클래스 추가
+    const img = document.createElement("img");
+    img.src = msg.image;
+    img.onload = () => {
+      chat.scrollTop = chat.scrollHeight;
+    };
+    div.appendChild(img);
+  }
+}
         
         chat.appendChild(div);
         chat.scrollTop = chat.scrollHeight;
       });
     }
 
+function startCountdown(messageKey) {
+  let timeLeft = 10;
+  const countdownElement = document.getElementById(`countdown-${messageKey}`);
+  
+  // 즉시 10 표시
+  if (countdownElement) {
+    countdownElement.innerHTML = `⏰ ${timeLeft}초 후 결과 발표...`;
+  }
+  
+  const timer = setInterval(() => {
+    timeLeft--;
+    if (countdownElement) {
+      if (timeLeft > 0) {
+        countdownElement.innerHTML = `⏰ ${timeLeft}초 후 결과 발표...`;
+      } else {
+        countdownElement.innerHTML = "🎊 결과 발표!";
+        clearInterval(timer);
+      }
+    } else {
+      clearInterval(timer);
+    }
+  }, 1000);
+}
     // 그림판 기능들
     function openDrawingBoard() {
       document.getElementById("drawingModal").style.display = "block";
@@ -1784,6 +2017,11 @@ async function createPost() {
   }
 }
 
+let currentPage = 0;
+const POSTS_PER_PAGE = 7;
+let allPosts = [];
+let displayedPosts = [];
+
 function loadFeedPosts() {
   db.ref('globalFeed').orderByChild('timestamp').on('value', snapshot => {
     allPosts = [];
@@ -1800,18 +2038,81 @@ function loadFeedPosts() {
     
     // 최신순으로 정렬
     allPosts.sort((a, b) => b.timestamp - a.timestamp);
-    displayPosts(allPosts);
+    
+    // 초기화
+    currentPage = 0;
+    displayedPosts = [];
+    loadMorePosts();
   });
+}
+
+function loadMorePosts() {
+  const startIndex = currentPage * POSTS_PER_PAGE;
+  const endIndex = startIndex + POSTS_PER_PAGE;
+  
+  // 랜덤으로 7개 선택 (남은 게시물이 7개 미만이면 전부)
+  const remainingPosts = allPosts.filter(post => !displayedPosts.includes(post));
+  const newPosts = getRandomPosts(remainingPosts, POSTS_PER_PAGE);
+  
+  displayedPosts = [...displayedPosts, ...newPosts];
+  displayPosts(displayedPosts);
+  
+  currentPage++;
+  
+  // 더보기 버튼 업데이트
+  updateLoadMoreButton();
+}
+
+function getRandomPosts(posts, count) {
+  if (posts.length <= count) return posts;
+  
+  const shuffled = [...posts];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  
+  return shuffled.slice(0, count);
+}
+
+function updateLoadMoreButton() {
+  const feedPosts = document.getElementById('feedPosts');
+  
+  // 기존 더보기 버튼 제거
+  const existingBtn = document.getElementById('loadMoreBtn');
+  if (existingBtn) existingBtn.remove();
+  
+  // 더 불러올 게시물이 있으면 버튼 추가
+  if (displayedPosts.length < allPosts.length) {
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.id = 'loadMoreBtn';
+    loadMoreBtn.className = 'success-btn';
+    loadMoreBtn.style.width = '100%';
+    loadMoreBtn.style.marginTop = '20px';
+    loadMoreBtn.textContent = '더보기';
+    loadMoreBtn.onclick = loadMorePosts;
+    feedPosts.appendChild(loadMoreBtn);
+  }
 }
 
 function displayPosts(posts) {
   const feedPosts = document.getElementById('feedPosts');
-  feedPosts.innerHTML = '';
+  
+  // 더보기 버튼 제거
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  if (loadMoreBtn) loadMoreBtn.remove();
+  
+  // 게시물만 남기고 다시 렌더링
+  const postElements = feedPosts.querySelectorAll('.feed-post');
+  postElements.forEach(el => el.remove());
   
   posts.forEach(post => {
     const postElement = createPostElement(post);
     feedPosts.appendChild(postElement);
   });
+  
+  // 더보기 버튼 다시 추가
+  updateLoadMoreButton();
 }
 
 function createPostElement(post) {
@@ -1951,6 +2252,432 @@ function searchPosts() {
 function searchByHashtag(hashtag) {
   document.getElementById('feedSearch').value = hashtag;
   searchPosts();
+}
+
+function openRandomModal() {
+  document.getElementById("randomModal").style.display = "block";
+}
+
+function closeRandomModal() {
+  document.getElementById("randomModal").style.display = "none";
+  // 폼 초기화
+  const inputs = document.querySelectorAll("#randomParticipants .option-input");
+  inputs.forEach(input => input.value = "");
+}
+
+function addRandomParticipant() {
+  const container = document.getElementById("randomParticipants");
+  const participantCount = container.querySelectorAll(".option-input").length;
+  
+  const newInput = document.createElement("input");
+  newInput.type = "text";
+  newInput.className = "option-input";
+  newInput.placeholder = `참가자 ${participantCount + 1}`;
+  
+  container.appendChild(newInput);
+}
+
+function startRandom() {
+  const type = document.getElementById("randomType").value;
+  const inputs = document.querySelectorAll("#randomParticipants .option-input");
+  const participants = [];
+  
+  inputs.forEach(input => {
+    if (input.value.trim()) {
+      participants.push(input.value.trim());
+    }
+  });
+  
+  if (participants.length < 2) {
+    alert("최소 2명의 참가자가 필요합니다.");
+    return;
+  }
+  
+  // 뽑기 시작 메시지
+  let startMessage = "";
+  if (type === "race") {
+    startMessage = "🏃‍♂️ 선수들 달리고 있군요! 누가 과연 승리할까요?";
+  } else if (type === "beauty") {
+    startMessage = "✨ 이 중에서 제일 잘생긴 사람은 누구일까요?";
+  } else if (type === "lucky") {
+    startMessage = "🍀 행운의 주인공을 뽑고 있습니다!";
+  }
+  
+  const startMsg = {
+    text: `${startMessage}\n참가자: ${participants.join(', ')}`,
+    sender: username,
+    type: 'random-start',
+    participants: participants,
+    randomType: type,
+    timestamp: Date.now()
+  };
+  
+  // 메시지 전송 후 카운트다운 시작
+  db.ref(`messages/${currentRoom}`).push(startMsg).then((ref) => {
+    const messageKey = ref.key;
+    
+    // 카운트다운 시작 (현재 사용자만)
+    setTimeout(() => startCountdown(messageKey), 100);
+    
+    // 10초 후 결과 발표
+    setTimeout(() => {
+      const winner = participants[Math.floor(Math.random() * participants.length)];
+      let resultMessage = "";
+      
+      if (type === "race") {
+        resultMessage = `🏆 ${winner}님이 이겼습니다!`;
+      } else if (type === "beauty") {
+        resultMessage = `👑 ${winner}님이 가장 잘생겼습니다!`;
+      } else if (type === "lucky") {
+        resultMessage = `🎉 ${winner}님이 행운의 주인공입니다!`;
+      }
+      
+      const resultMsg = {
+        text: resultMessage,
+        sender: username,
+        type: 'random-result',
+        timestamp: Date.now()
+      };
+      
+      db.ref(`messages/${currentRoom}`).push(resultMsg);
+    }, 10000);
+  });
+  
+  closeRandomModal();
+}
+
+// 금지어 관리 변수
+let currentRemoveWord = null;
+
+// 금지어 모달 관련 함수들
+function openBannedWordsModal() {
+  document.getElementById("bannedWordsModal").style.display = "block";
+  loadBannedWords();
+}
+
+function closeBannedWordsModal() {
+  document.getElementById("bannedWordsModal").style.display = "none";
+  document.getElementById("newBannedWord").value = "";
+  document.getElementById("bannedWordPassword").value = "";
+}
+
+function loadBannedWords() {
+  const listContainer = document.getElementById("bannedWordsList");
+  
+  db.ref(`bannedWords/${currentRoom}`).once("value", snapshot => {
+    const bannedWords = snapshot.val() || {};
+    listContainer.innerHTML = "";
+    
+    const wordCount = Object.keys(bannedWords).length;
+    
+    if (wordCount === 0) {
+      listContainer.innerHTML = "<p style='color: #aaa;'>설정된 금지어가 없습니다.</p>";
+      return;
+    }
+    
+    for (let wordId in bannedWords) {
+      const wordData = bannedWords[wordId];
+      const wordDiv = document.createElement("div");
+      wordDiv.style.cssText = `
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: rgba(255,0,0,0.1);
+        border: 1px solid rgba(255,0,0,0.3);
+        border-radius: 8px;
+        margin-bottom: 10px;
+      `;
+      
+      wordDiv.innerHTML = `
+        <span style="color: #ff6b6b;">${wordData.word}</span>
+        <button onclick="requestRemoveBannedWord('${wordId}', '${wordData.word}')" 
+                style="background: #ff4757; color: white; border: none; border-radius: 50%; width: 50px; height: 35px; cursor: pointer;">x</button>
+      `;
+      
+      listContainer.appendChild(wordDiv);
+    }
+    
+    // 슬롯 정보 표시
+    const slotInfo = document.createElement("p");
+    slotInfo.style.cssText = "color: #aaa; font-size: 0.9em; margin-top: 10px;";
+    slotInfo.textContent = `사용된 슬롯: ${wordCount}/10`;
+    listContainer.appendChild(slotInfo);
+  });
+}
+
+function addBannedWord() {
+  const word = document.getElementById("newBannedWord").value.trim();
+  const password = document.getElementById("bannedWordPassword").value.trim();
+  
+  if (!word) {
+    alert("금지어를 입력해주세요.");
+    return;
+  }
+  
+  if (!password) {
+    alert("관리자 비밀번호를 설정해주세요.");
+    return;
+  }
+  
+  // 현재 금지어 개수 확인
+  db.ref(`bannedWords/${currentRoom}`).once("value", snapshot => {
+    const bannedWords = snapshot.val() || {};
+    
+    if (Object.keys(bannedWords).length >= 10) {
+      alert("금지어는 최대 10개까지만 설정할 수 있습니다.");
+      return;
+    }
+    
+    // 중복 확인
+    for (let wordId in bannedWords) {
+      if (bannedWords[wordId].word.toLowerCase() === word.toLowerCase()) {
+        alert("이미 등록된 금지어입니다.");
+        return;
+      }
+    }
+    
+    // 금지어 추가
+    const wordData = {
+      word: word,
+      password: password,
+      createdBy: username,
+      timestamp: Date.now()
+    };
+    
+    db.ref(`bannedWords/${currentRoom}`).push(wordData);
+    
+    // 폼 초기화
+    document.getElementById("newBannedWord").value = "";
+    document.getElementById("bannedWordPassword").value = "";
+    
+    alert("금지어가 추가되었습니다.");
+    loadBannedWords();
+  });
+}
+
+function requestRemoveBannedWord(wordId, word) {
+  currentRemoveWord = wordId;
+  document.getElementById("removeWordText").textContent = `"${word}"를 삭제하시겠습니까?`;
+  document.getElementById("removeBannedWordModal").style.display = "block";
+}
+
+function confirmRemoveBannedWord() {
+  const inputPassword = document.getElementById("removePasswordInput").value;
+  
+  if (!inputPassword) {
+    alert("비밀번호를 입력해주세요.");
+    return;
+  }
+  
+  // 비밀번호 확인
+  db.ref(`bannedWords/${currentRoom}/${currentRemoveWord}/password`).once("value", snapshot => {
+    const correctPassword = snapshot.val();
+    
+    if (inputPassword === correctPassword) {
+      // 금지어 삭제
+      db.ref(`bannedWords/${currentRoom}/${currentRemoveWord}`).remove();
+      closeRemoveBannedWordModal();
+      loadBannedWords();
+      alert("금지어가 삭제되었습니다.");
+    } else {
+      alert("비밀번호가 틀렸습니다.");
+    }
+  });
+}
+
+function closeRemoveBannedWordModal() {
+  document.getElementById("removeBannedWordModal").style.display = "none";
+  document.getElementById("removePasswordInput").value = "";
+  currentRemoveWord = null;
+}
+
+// 문의하기 관련 함수들
+function showInquiry() {
+  document.getElementById("roomSection").style.display = "none";
+  document.getElementById("inquirySection").style.display = "block";
+}
+
+function hideInquiry() {
+  document.getElementById("inquirySection").style.display = "none";
+  document.getElementById("roomSection").style.display = "block";
+  // 폼 초기화
+  document.getElementById("inquiryContent").value = "";
+  document.getElementById("adminPassword").value = "";
+  document.getElementById("inquiriesView").style.display = "none";
+}
+
+async function submitInquiry() {
+  const type = document.getElementById("inquiryType").value;
+  const content = document.getElementById("inquiryContent").value.trim();
+  
+  if (!content) {
+    alert("문의 내용을 입력해주세요.");
+    return;
+  }
+  
+  const inquiryData = {
+    type: type,
+    content: content,
+    author: username,
+    timestamp: Date.now(),
+    status: 'pending'
+  };
+  
+  try {
+    await db.ref('inquiries').push(inquiryData);
+    alert("문의가 성공적으로 제출되었습니다!");
+    document.getElementById("inquiryContent").value = "";
+  } catch (error) {
+    console.error("문의 제출 오류:", error);
+    alert("문의 제출에 실패했습니다.");
+  }
+}
+
+function viewInquiries() {
+  const password = document.getElementById("adminPassword").value;
+  
+  if (password !== "09110911") {
+    alert("관리자 비밀번호가 틀렸습니다.");
+    return;
+  }
+  
+  db.ref('inquiries').orderByChild('timestamp').once('value', snapshot => {
+    const inquiries = snapshot.val();
+    const inquiriesView = document.getElementById("inquiriesView");
+    
+    if (!inquiries) {
+      inquiriesView.innerHTML = "<p style='color: #aaa;'>등록된 문의가 없습니다.</p>";
+      inquiriesView.style.display = "block";
+      return;
+    }
+    
+    let inquiriesHTML = "<h4>📋 문의 내역</h4>";
+    
+    // 최신순으로 정렬
+    const sortedInquiries = Object.keys(inquiries).map(key => ({
+      id: key,
+      ...inquiries[key]
+    })).sort((a, b) => b.timestamp - a.timestamp);
+    
+    sortedInquiries.forEach(inquiry => {
+      const typeText = getInquiryTypeText(inquiry.type);
+      const timeText = new Date(inquiry.timestamp).toLocaleString('ko-KR');
+      
+      inquiriesHTML += `
+        <div style="background: rgba(255,255,255,0.1); border-radius: 10px; padding: 15px; margin: 10px 0; border-left: 4px solid #ffa500;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: #00ffd5;">${inquiry.author}</strong>
+            <span style="font-size: 0.8em; color: rgba(255,255,255,0.7);">${timeText}</span>
+          </div>
+          <div style="color: #ffa500; font-weight: bold; margin-bottom: 8px;">[${typeText}]</div>
+          <div style="white-space: pre-line;">${inquiry.content}</div>
+        </div>
+      `;
+    });
+    
+    inquiriesView.innerHTML = inquiriesHTML;
+    inquiriesView.style.display = "block";
+  });
+}
+
+function getInquiryTypeText(type) {
+  switch(type) {
+    case 'bug': return '사이트 버그, 수정사항';
+    case 'password': return '비밀번호 분실';
+    case 'report': return '신고';
+    default: return '기타';
+  }
+}
+
+let allRooms = {}; // 전체 방 목록 저장
+
+// 기존 rooms 리스너 수정
+db.ref("rooms").on("value", snapshot => {
+  allRooms = snapshot.val() || {};
+  displayRooms(allRooms);
+});
+
+function displayRooms(rooms) {
+  const roomList = document.getElementById("roomList");
+  roomList.innerHTML = "";
+  
+  for (let room in rooms) {
+    const li = document.createElement("li");
+    const hasPassword = rooms[room].password;
+    
+    li.innerHTML = `
+      <span>${room}</span>
+      ${hasPassword ? '<span class="lock-icon">🔒</span>' : ''}
+    `;
+    
+    li.onclick = () => {
+      if (hasPassword) {
+        selectedRoomForPassword = room;
+        document.getElementById("passwordModal").style.display = "block";
+      } else {
+        enterRoom(room);
+      }
+    };
+    
+    roomList.appendChild(li);
+  }
+}
+
+function searchRooms() {
+  const searchTerm = document.getElementById("roomSearch").value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    displayRooms(allRooms);
+    return;
+  }
+  
+  const filteredRooms = {};
+  for (let roomName in allRooms) {
+    if (roomName.toLowerCase().includes(searchTerm)) {
+      filteredRooms[roomName] = allRooms[roomName];
+    }
+  }
+  
+  displayRooms(filteredRooms);
+}
+
+// 공유하기 관련 함수들
+function openShareModal() {
+  const currentUrl = window.location.href;
+  document.getElementById("shareLink").value = currentUrl;
+  generateQRCode(currentUrl);
+  document.getElementById("shareModal").style.display = "block";
+}
+
+function closeShareModal() {
+  document.getElementById("shareModal").style.display = "none";
+}
+
+function generateQRCode(url) {
+  // 간단한 QR 코드 생성 (Google Charts API 사용)
+  const qrCodeDiv = document.getElementById("qrCode");
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+  
+  qrCodeDiv.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="border-radius: 5px;">`;
+}
+
+function copyLink() {
+  const linkInput = document.getElementById("shareLink");
+  linkInput.select();
+  linkInput.setSelectionRange(0, 99999); // 모바일 지원
+  
+  try {
+    document.execCommand('copy');
+    alert("링크가 복사되었습니다!");
+  } catch (err) {
+    // Fallback for modern browsers
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+      alert("링크가 복사되었습니다!");
+    }).catch(() => {
+      alert("링크 복사에 실패했습니다. 수동으로 복사해주세요.");
+    });
+  }
 }
 
   </script>
