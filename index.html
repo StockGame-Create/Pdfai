@@ -39,6 +39,8 @@
   --friday-bg: radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
   --saturday-bg: radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(219, 39, 119, 0.3) 0%, transparent 50%);
   --sunday-bg: radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.3) 0%, transparent 50%);
+  --nickname-color: #00ffd5;
+  --message-bg: rgba(255, 255, 255, 0.2);
 }
     
 
@@ -229,16 +231,19 @@ body {
 .message {
   margin-bottom: 15px;
   padding: 10px 15px;
-  background-color: rgba(255,255,255,0.2);
+
   border-radius: 10px;
   animation: popIn 0.3s ease;
   white-space: pre-line;
   text-indent: -40px;
   padding-left: 50px;
+
+  background-color: var(--message-bg);
+
 }
 
 .message strong {
-  color: #00ffd5;
+  color: var(--nickname-color);
 }
 
 .message img {
@@ -456,16 +461,25 @@ body {
       color: white;
     }
 
-    .password-modal {
-      display: none;
-      position: fixed;
-      z-index: 1001;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.8);
-    }
+.password-modal {
+  display: none !important; /* !important 추가 */
+  position: fixed;
+  z-index: 1001;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.password-modal.show {
+  display: block !important;
+  opacity: 1;
+  visibility: visible;
+}
 
     .password-modal-content {
       background-color: rgba(0,0,0,0.8);
@@ -1428,6 +1442,39 @@ body.fullscreen .copyright-btn {
   }
 }
 
+.customization-section {
+  background: rgba(255,255,255,0.08);
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 20px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.color-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+.color-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.color-group label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.8);
+}
+
+.color-group input[type="color"] {
+  width: 40px;
+  height: 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
 
   </style>
 </head>
@@ -1442,6 +1489,17 @@ body.fullscreen .copyright-btn {
   <div id="nameSection">
     <input type="text" id="username" placeholder="당신의 이름은?">
     <button onclick="setUsername()">이름 설정</button>
+  </div>
+
+    <!-- 비밀번호 입력 모달 -->
+  <div id="passwordModal" class="password-modal">
+    <div class="password-modal-content">
+      <h3>🔒 방 입장</h3>
+      <p>이 방은 비밀번호가 필요합니다.</p>
+      <input type="password" id="roomPasswordInput" placeholder="비밀번호 입력">
+      <button onclick="checkPassword()">입장하기</button>
+      <button onclick="closePasswordModal()">취소</button>
+    </div>
   </div>
 
   <!-- 방 만들기 및 목록 -->
@@ -1662,6 +1720,30 @@ body.fullscreen .copyright-btn {
           <div class="preview-room-item" id="previewItem">예시 방</div>
         </div>
       </div>
+
+      <div class="customization-section">
+  <h4>🎨 테마 커스터마이징</h4>
+  <div class="color-options">
+    <div class="color-group">
+      <label>채팅 닉네임 색상:</label>
+      <input type="color" id="nicknameColor" value="#00ffd5" onchange="updateNicknameColor()">
+    </div>
+    <div class="color-group">
+      <label>메시지 블록 색상:</label>
+      <input type="color" id="messageBlockColor" value="#ffffff" onchange="updateMessageBlockColor()">
+    </div>
+    <div class="color-group">
+      <label>버튼 주 색상:</label>
+      <input type="color" id="primaryButtonColor" value="#6366f1" onchange="updateButtonColors()">
+    </div>
+    <div class="color-group">
+      <label>배경 강조 색상:</label>
+      <input type="color" id="accentColor" value="#8b5cf6" onchange="updateAccentColor()">
+    </div>
+  </div>
+  <button onclick="resetColors()">기본값 복원</button>
+  <button onclick="saveColorPreset()">색상 저장</button>
+</div>
       
       <button onclick="applyRoomColor()" class="success-btn" style="width: 100%; margin-top: 20px;">색상 적용하기</button>
     </div>
@@ -1720,17 +1802,6 @@ body.fullscreen .copyright-btn {
   
   <div id="quizResultButtons"></div>
 </div>
-
-  <!-- 비밀번호 입력 모달 -->
-  <div id="passwordModal" class="password-modal">
-    <div class="password-modal-content">
-      <h3>🔒 방 입장</h3>
-      <p>이 방은 비밀번호가 필요합니다.</p>
-      <input type="password" id="roomPasswordInput" placeholder="비밀번호 입력">
-      <button onclick="checkPassword()">입장하기</button>
-      <button onclick="closePasswordModal()">취소</button>
-    </div>
-  </div>
 
 
 
@@ -1938,7 +2009,11 @@ let feedInitialized = false; // 피드 초기 로드 여부 확인
       username = nameInput;
       document.getElementById("nameSection").style.display = "none";
       document.getElementById("roomSection").style.display = "block";
+
+        initializeModals();
     }
+
+    
 
     function createRoom() {
       const roomName = document.getElementById("roomName").value.trim();
@@ -1983,10 +2058,21 @@ let feedInitialized = false; // 피드 초기 로드 여부 확인
       }
     });
 
-    function closePasswordModal() {
-      document.getElementById("passwordModal").style.display = "none";
-      selectedRoomForPassword = null;
-    }
+  function showPasswordModal() {
+  const modal = document.getElementById("passwordModal");
+  // 강제로 스타일 리셋
+  modal.style.display = "block";
+  modal.style.opacity = "1";
+  modal.style.visibility = "visible";
+  modal.classList.add('show');
+}
+
+function closePasswordModal() {
+  const modal = document.getElementById("passwordModal");
+  modal.style.display = "none";
+  modal.classList.remove('show');
+  selectedRoomForPassword = null;
+}
 
     function checkPassword() {
       const inputPassword = document.getElementById("roomPasswordInput").value;
@@ -3451,6 +3537,7 @@ function displayRooms(rooms) {
       if (hasPassword) {
         selectedRoomForPassword = room;
         document.getElementById("passwordModal").style.display = "block";
+            showPasswordModal();
       } else {
         enterRoom(room);
       }
@@ -3709,6 +3796,85 @@ function applyRoomColor() {
   alert("방 색상이 적용되었습니다!");
   closeRoomDecorator();
 }
+
+// 색상 설정 변수들
+let customColors = {
+  nickname: '#00ffd5',
+  messageBlock: '#ffffff',
+  primaryButton: '#6366f1',
+  accent: '#8b5cf6'
+};
+
+function updateNicknameColor() {
+  const color = document.getElementById('nicknameColor').value;
+  customColors.nickname = color;
+  document.documentElement.style.setProperty('--nickname-color', color);
+  saveColorsToStorage();
+}
+
+function updateMessageBlockColor() {
+  const color = document.getElementById('messageBlockColor').value;
+  customColors.messageBlock = color;
+  const opacity = color === '#ffffff' ? '0.2' : '0.15';
+  document.documentElement.style.setProperty('--message-bg', `${color}${Math.round(255 * parseFloat(opacity)).toString(16)}`);
+  saveColorsToStorage();
+}
+
+function updateButtonColors() {
+  const color = document.getElementById('primaryButtonColor').value;
+  customColors.primaryButton = color;
+  document.documentElement.style.setProperty('--accent-primary', color);
+  saveColorsToStorage();
+}
+
+function updateAccentColor() {
+  const color = document.getElementById('accentColor').value;
+  customColors.accent = color;
+  document.documentElement.style.setProperty('--accent-secondary', color);
+  saveColorsToStorage();
+}
+
+function resetColors() {
+  document.getElementById('nicknameColor').value = '#00ffd5';
+  document.getElementById('messageBlockColor').value = '#ffffff';
+  document.getElementById('primaryButtonColor').value = '#6366f1';
+  document.getElementById('accentColor').value = '#8b5cf6';
+  
+  updateNicknameColor();
+  updateMessageBlockColor();
+  updateButtonColors();
+  updateAccentColor();
+}
+
+function saveColorsToStorage() {
+  // 사용자별 색상 설정을 Firebase에 저장
+  if (username) {
+    db.ref(`userSettings/${username}/colors`).set(customColors);
+  }
+}
+
+function loadUserColors() {
+  if (username) {
+    db.ref(`userSettings/${username}/colors`).once('value', snapshot => {
+      const colors = snapshot.val();
+      if (colors) {
+        customColors = colors;
+        document.getElementById('nicknameColor').value = colors.nickname;
+        document.getElementById('messageBlockColor').value = colors.messageBlock;
+        document.getElementById('primaryButtonColor').value = colors.primaryButton;
+        document.getElementById('accentColor').value = colors.accent;
+        
+        // 색상 적용
+        updateNicknameColor();
+        updateMessageBlockColor();
+        updateButtonColors();
+        updateAccentColor();
+      }
+    });
+  }
+}
+
+
 
   </script>
 
