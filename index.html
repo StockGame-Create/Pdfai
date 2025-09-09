@@ -522,7 +522,7 @@ body {
 
     /* 퀴즈 스타일 */
     .quiz-container {
-      background-color: #000000;
+      background-color: #796767;
       padding: 20px;
       border-radius: 10px;
       margin: 10px 0;
@@ -1481,7 +1481,7 @@ body.fullscreen .copyright-btn {
 <body>
 
   <h2>💬 Unvul Chat !!</h2>
-  <h4>(Made by 범서) Ver. 4.6</h4>
+  <h4>(Made by 범서) Ver. 4.75</h4>
   
 
 
@@ -1926,13 +1926,13 @@ body.fullscreen .copyright-btn {
           <h4>정답</h4>
           <input type="text" id="shortAnswerCorrect" class="question-input" placeholder="정답을 입력하세요">
         </div>
+        
+        <br>
+        <button onclick="submitQuiz()" class="success-btn">퀴즈 출제</button>
+
+
       </div>
     </div>
-    <div>
-        <!-- footer 삭제하고 Copyright 버튼만 추가 -->
- <button class="copyright-btn" onclick="showCopyright()">Copyright</button>
-    </div>
-    
   </div>
 
 
@@ -2010,7 +2010,6 @@ let feedInitialized = false; // 피드 초기 로드 여부 확인
       document.getElementById("nameSection").style.display = "none";
       document.getElementById("roomSection").style.display = "block";
 
-        initializeModals();
     }
 
     
@@ -2074,21 +2073,23 @@ function closePasswordModal() {
   selectedRoomForPassword = null;
 }
 
-    function checkPassword() {
-      const inputPassword = document.getElementById("roomPasswordInput").value;
-      
-      db.ref("rooms/" + selectedRoomForPassword + "/password").once("value", snapshot => {
-        const roomPassword = snapshot.val();
-        
-        if (inputPassword === roomPassword) {
-          document.getElementById("passwordModal").style.display = "none";
-          document.getElementById("roomPasswordInput").value = "";
-          enterRoom(selectedRoomForPassword);
-        } else {
-          alert("비밀번호가 틀렸습니다.");
-        }
-      });
+function checkPassword() {
+  const inputPassword = document.getElementById("roomPasswordInput").value;
+  
+  db.ref("rooms/" + selectedRoomForPassword + "/password").once("value", snapshot => {
+    const roomPassword = snapshot.val();
+    
+    if (inputPassword === roomPassword) {
+      const roomToEnter = selectedRoomForPassword; // 방 이름을 미리 저장
+      closePasswordModal(); // 모달 닫기 (이때 selectedRoomForPassword가 null이 됨)
+      enterRoom(roomToEnter); // 저장된 방 이름으로 입장
+    } else {
+      alert("비밀번호가 틀렸습니다.");
     }
+  });
+}
+
+
 
     function enterRoom(roomName) {
       currentRoom = roomName;
@@ -2497,14 +2498,30 @@ function startCountdown(messageKey) {
       toggleQuizType(); // 초기 설정
     }
 
-    function closeQuizModal() {
-      document.getElementById("quizModal").style.display = "none";
-      // 폼 초기화
-      document.getElementById("quizQuestion").value = "";
-      const optionInputs = document.querySelectorAll(".option-input");
-      optionInputs.forEach(input => input.value = "");
-      document.getElementById("shortAnswerCorrect").value = "";
-    }
+ function closeQuizModal() {
+  document.getElementById("quizModal").style.display = "none";
+  // 폼 초기화
+  document.getElementById("quizQuestion").value = "";
+  const optionInputs = document.querySelectorAll(".option-input");
+  optionInputs.forEach(input => input.value = "");
+  document.getElementById("shortAnswerCorrect").value = "";
+  
+  // 정답 선택지를 기본 5개로 초기화
+  const correctAnswer = document.getElementById("correctAnswer");
+  correctAnswer.innerHTML = `
+    <option value="1">1번</option>
+    <option value="2">2번</option>
+    <option value="3">3번</option>
+    <option value="4">4번</option>
+    <option value="5">5번</option>
+  `;
+  
+  // 추가된 선택지 입력창들도 제거하고 기본 5개만 남기기
+  const allOptions = document.querySelectorAll("#multipleOptions .option-input");
+  for (let i = 5; i < allOptions.length; i++) {
+    allOptions[i].remove();
+  }
+}
 
     function toggleQuizType() {
       const quizType = document.getElementById("quizType").value;
@@ -2520,25 +2537,25 @@ function startCountdown(messageKey) {
       }
     }
 
-    function addOption() {
-      const multipleOptions = document.getElementById("multipleOptions");
-      const optionCount = document.querySelectorAll(".option-input").length;
-      
-      const newOption = document.createElement("input");
-      newOption.type = "text";
-      newOption.className = "option-input";
-      newOption.placeholder = `선택지 ${optionCount + 1}`;
-      
-      const addButton = multipleOptions.querySelector("button");
-      multipleOptions.insertBefore(newOption, addButton);
-      
-      // 정답 선택지 업데이트
-      const correctAnswer = document.getElementById("correctAnswer");
-      const newOptionElement = document.createElement("option");
-      newOptionElement.value = optionCount + 1;
-      newOptionElement.textContent = `${optionCount + 1}번`;
-      correctAnswer.appendChild(newOptionElement);
-    }
+function addOption() {
+  const multipleOptions = document.getElementById("multipleOptions");
+  const optionCount = document.querySelectorAll("#multipleOptions .option-input").length;
+  
+  const newOption = document.createElement("input");
+  newOption.type = "text";
+  newOption.className = "option-input";
+  newOption.placeholder = `선택지 ${optionCount + 1}`;
+  
+  const addButton = multipleOptions.querySelector("button");
+  multipleOptions.insertBefore(newOption, addButton);
+  
+  // 정답 선택지 업데이트 - 수정된 부분
+  const correctAnswer = document.getElementById("correctAnswer");
+  const newOptionElement = document.createElement("option");
+  newOptionElement.value = (optionCount + 1).toString();
+  newOptionElement.textContent = `${optionCount + 1}번`;
+  correctAnswer.appendChild(newOptionElement);
+}
 
     function submitQuiz() {
       const question = document.getElementById("quizQuestion").value.trim();
@@ -3380,7 +3397,19 @@ function addBannedWord() {
 function requestRemoveBannedWord(wordId, word) {
   currentRemoveWord = wordId;
   document.getElementById("removeWordText").textContent = `"${word}"를 삭제하시겠습니까?`;
-  document.getElementById("removeBannedWordModal").style.display = "block";
+  
+  const modal = document.getElementById("removeBannedWordModal");
+  modal.style.display = "block";
+  modal.classList.add('show'); // CSS 클래스 추가 (다른 모달들처럼)
+  
+  // 강제로 스타일 설정
+  modal.style.position = "fixed";
+  modal.style.top = "0";
+  modal.style.left = "0";
+  modal.style.width = "100%";
+  modal.style.height = "100%";
+  modal.style.zIndex = "9999";
+  modal.style.backgroundColor = "rgba(0,0,0,0.5)";
 }
 
 function confirmRemoveBannedWord() {
@@ -3408,7 +3437,9 @@ function confirmRemoveBannedWord() {
 }
 
 function closeRemoveBannedWordModal() {
-  document.getElementById("removeBannedWordModal").style.display = "none";
+  const modal = document.getElementById("removeBannedWordModal");
+  modal.style.display = "none";
+  modal.classList.remove('show'); // 클래스 제거
   document.getElementById("removePasswordInput").value = "";
   currentRemoveWord = null;
 }
