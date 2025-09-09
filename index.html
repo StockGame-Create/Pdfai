@@ -600,6 +600,26 @@ body {
       overflow-y: auto;
     }
 
+    .feed-controls {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.sort-select {
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 14px;
+}
+
+.feed-search {
+  flex: 1;
+}
+
     .feed-search {
       width: 100%;
       padding: 15px;
@@ -1574,8 +1594,14 @@ body.fullscreen .copyright-btn {
     <button onclick="hideFeed()" class="danger-btn">뒤로가기</button>
   </div>
   
-  <div class="feed-container">
+<div class="feed-container">
+  <div class="feed-controls">
     <input type="text" id="feedSearch" class="feed-search" placeholder="해시태그로 검색... (#예시)" onkeyup="searchPosts()">
+    <select id="sortOption" onchange="changeSortOrder()" class="sort-select">
+      <option value="latest">랜덤순</option>
+      <option value="likes">하트순</option>
+    </select>
+  </div>
     
     <!-- 게시물 작성 폼 -->
     <div class="create-post-form">
@@ -1674,78 +1700,57 @@ body.fullscreen .copyright-btn {
 <div id="roomDecoratorModal" class="modal" style="display:none;">
   <div class="modal-content">
     <span class="close" onclick="closeRoomDecorator()">&times;</span>
-    <h3>🎨 방 꾸미기</h3>
+    <h3>🎨 테마 커스터마이징</h3>
     
     <div class="decorator-container">
-      <h4>색상 선택</h4>
-      <div class="color-selection">
-        <div class="color-category">
-          <h5>배경색</h5>
-          <div class="single-colors">
-            <div class="color-option" style="background: #ff4757" onclick="selectRoomColor('#ff4757', 'background')"></div>
-            <div class="color-option" style="background: #2ed573" onclick="selectRoomColor('#2ed573', 'background')"></div>
-            <div class="color-option" style="background: #1e90ff" onclick="selectRoomColor('#1e90ff', 'background')"></div>
-            <div class="color-option" style="background: #ffa502" onclick="selectRoomColor('#ffa502', 'background')"></div>
-            <div class="color-option" style="background: #ff6b6b" onclick="selectRoomColor('#ff6b6b', 'background')"></div>
-            <div class="color-option" style="background: #a55eea" onclick="selectRoomColor('#a55eea', 'background')"></div>
-          </div>
+      <!-- 통합된 색상 설정 섹션 -->
+      <div class="color-section">
+        <h4>🎨 색상 설정</h4>
+        
+        <div class="color-group">
+          <label>방 목록 배경색:</label>
+          <input type="color" id="roomBackgroundColor" value="#6366f1" onchange="updateRoomColors()">
         </div>
         
-        <div class="color-category">
-          <h5>배경 그라데이션</h5>
-          <div class="gradient-colors">
-            <div class="color-option" style="background: linear-gradient(45deg, #ff9a9e, #fecfef)" onclick="selectRoomColor('linear-gradient(45deg, #ff9a9e, #fecfef)', 'background')"></div>
-            <div class="color-option" style="background: linear-gradient(45deg, #a8edea, #fed6e3)" onclick="selectRoomColor('linear-gradient(45deg, #a8edea, #fed6e3)', 'background')"></div>
-            <div class="color-option" style="background: linear-gradient(45deg, #ffecd2, #fcb69f)" onclick="selectRoomColor('linear-gradient(45deg, #ffecd2, #fcb69f)', 'background')"></div>
-            <div class="color-option" style="background: linear-gradient(45deg, #667eea, #764ba2)" onclick="selectRoomColor('linear-gradient(45deg, #667eea, #764ba2)', 'background')"></div>
-          </div>
+        <div class="color-group">
+          <label>방 목록 텍스트색:</label>
+          <input type="color" id="roomTextColor" value="#ffffff" onchange="updateRoomColors()">
         </div>
-
-        <div class="color-category">
-          <h5>글자색</h5>
-          <div class="text-colors">
-            <div class="color-option" style="background: #ffffff" onclick="selectRoomColor('#ffffff', 'text')"></div>
-            <div class="color-option" style="background: #000000" onclick="selectRoomColor('#000000', 'text')"></div>
-            <div class="color-option" style="background: #ff4757" onclick="selectRoomColor('#ff4757', 'text')"></div>
-            <div class="color-option" style="background: #2ed573" onclick="selectRoomColor('#2ed573', 'text')"></div>
-            <div class="color-option" style="background: #1e90ff" onclick="selectRoomColor('#1e90ff', 'text')"></div>
-            <div class="color-option" style="background: #ffa502" onclick="selectRoomColor('#ffa502', 'text')"></div>
-          </div>
+        
+        <div class="color-group">
+          <label>채팅 닉네임 색상:</label>
+          <input type="color" id="nicknameColor" value="#00ffd5" onchange="updateNicknameColor()">
+        </div>
+        
+        <div class="color-group">
+          <label>메시지 블록 색상:</label>
+          <input type="color" id="messageBlockColor" value="#ffffff" onchange="updateMessageBlockColor()">
+        </div>
+        
+        <div class="color-group">
+          <label>버튼 주 색상:</label>
+          <input type="color" id="primaryButtonColor" value="#6366f1" onchange="updateButtonColors()">
+        </div>
+        
+        <div class="color-group">
+          <label>배경 강조 색상:</label>
+          <input type="color" id="accentColor" value="#8b5cf6" onchange="updateAccentColor()">
         </div>
       </div>
       
+      <!-- 미리보기 섹션 -->
       <div class="preview-section">
         <h4>미리보기</h4>
         <div class="room-preview" id="roomPreview">
           <div class="preview-room-item" id="previewItem">예시 방</div>
         </div>
       </div>
-
-      <div class="customization-section">
-  <h4>🎨 테마 커스터마이징</h4>
-  <div class="color-options">
-    <div class="color-group">
-      <label>채팅 닉네임 색상:</label>
-      <input type="color" id="nicknameColor" value="#00ffd5" onchange="updateNicknameColor()">
-    </div>
-    <div class="color-group">
-      <label>메시지 블록 색상:</label>
-      <input type="color" id="messageBlockColor" value="#ffffff" onchange="updateMessageBlockColor()">
-    </div>
-    <div class="color-group">
-      <label>버튼 주 색상:</label>
-      <input type="color" id="primaryButtonColor" value="#6366f1" onchange="updateButtonColors()">
-    </div>
-    <div class="color-group">
-      <label>배경 강조 색상:</label>
-      <input type="color" id="accentColor" value="#8b5cf6" onchange="updateAccentColor()">
-    </div>
-  </div>
-  <button onclick="resetColors()">기본값 복원</button>
-  <button onclick="saveColorPreset()">색상 저장</button>
-</div>
       
-      <button onclick="applyRoomColor()" class="success-btn" style="width: 100%; margin-top: 20px;">색상 적용하기</button>
+      <!-- 버튼들 -->
+      <div class="button-group">
+        <button onclick="resetColors()" class="secondary-btn">기본값 복원</button>
+        <button onclick="applyAllColors()" class="success-btn">모든 색상 적용</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1976,6 +1981,50 @@ function setDayBackground() {
 // 페이지 로드시 배경 설정
 setDayBackground();
 
+// 통합된 색상 업데이트 함수
+function updateRoomColors() {
+  const bgColor = document.getElementById('roomBackgroundColor').value;
+  const textColor = document.getElementById('roomTextColor').value;
+  
+  // 미리보기 업데이트
+  const preview = document.getElementById('previewItem');
+  preview.style.background = bgColor;
+  preview.style.color = textColor;
+}
+
+function applyAllColors() {
+  // 방 목록 색상 적용
+  const bgColor = document.getElementById('roomBackgroundColor').value;
+  const textColor = document.getElementById('roomTextColor').value;
+  
+  document.querySelectorAll('#roomList li').forEach(li => {
+    li.style.background = bgColor;
+    li.style.color = textColor;
+  });
+  
+  // 채팅 테마 색상 적용
+  updateNicknameColor();
+  updateMessageBlockColor();
+  updateButtonColors();
+  updateAccentColor();
+  
+  alert("모든 색상이 적용되었습니다!");
+  closeRoomDecorator();
+}
+
+function resetColors() {
+  // 모든 색상을 기본값으로 리셋
+  document.getElementById('roomBackgroundColor').value = '#6366f1';
+  document.getElementById('roomTextColor').value = '#ffffff';
+  document.getElementById('nicknameColor').value = '#00ffd5';
+  document.getElementById('messageBlockColor').value = '#ffffff';
+  document.getElementById('primaryButtonColor').value = '#6366f1';
+  document.getElementById('accentColor').value = '#8b5cf6';
+  
+  // 미리보기 업데이트
+  updateRoomColors();
+}
+
     let currentRoom = null;
     let username = null;
     let selectedRoomForPassword = null;
@@ -2070,6 +2119,7 @@ function closePasswordModal() {
   const modal = document.getElementById("passwordModal");
   modal.style.display = "none";
   modal.classList.remove('show');
+  document.getElementById("roomPasswordInput").value = "";
   selectedRoomForPassword = null;
 }
 
@@ -3902,6 +3952,101 @@ function loadUserColors() {
         updateAccentColor();
       }
     });
+  }
+}
+
+let currentSortOrder = 'latest'; // 현재 정렬 방식
+
+function changeSortOrder() {
+  const sortOption = document.getElementById('sortOption').value;
+  currentSortOrder = sortOption;
+  
+  // 검색어가 있으면 검색 결과를 정렬, 없으면 전체를 정렬
+  const searchTerm = document.getElementById('feedSearch').value.trim();
+  if (searchTerm) {
+    searchPosts();
+  } else {
+    sortAndDisplayPosts(allPosts);
+  }
+}
+
+function sortAndDisplayPosts(posts) {
+  let sortedPosts;
+  
+  if (currentSortOrder === 'likes') {
+    // 하트(좋아요) 순으로 정렬
+    sortedPosts = [...posts].sort((a, b) => {
+      const aLikes = a.likes ? Object.keys(a.likes).length : 0;
+      const bLikes = b.likes ? Object.keys(b.likes).length : 0;
+      return bLikes - aLikes; // 내림차순 (많은 하트부터)
+    });
+  } else {
+    // 최신순으로 정렬 (기본)
+    sortedPosts = [...posts].sort((a, b) => b.timestamp - a.timestamp);
+  }
+  
+  // 현재 표시 방식에 맞게 처리
+  if (currentSortOrder === 'likes') {
+    // 하트순일 때는 모든 게시물을 한 번에 표시
+    displayedPosts = sortedPosts;
+    displayPosts(displayedPosts);
+    // 더보기 버튼 제거
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) loadMoreBtn.remove();
+  } else {
+    // 최신순일 때는 기존 페이지네이션 방식 사용
+    currentPage = 0;
+    displayedPosts = [];
+    allPosts = sortedPosts;
+    loadMorePosts();
+  }
+}
+
+// 기존 searchPosts 함수 수정
+function searchPosts() {
+  const searchTerm = document.getElementById('feedSearch').value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    sortAndDisplayPosts(allPosts);
+    return;
+  }
+  
+  const filteredPosts = allPosts.filter(post => {
+    return post.hashtags.some(hashtag => 
+      hashtag.toLowerCase().includes(searchTerm.replace('#', ''))
+    );
+  });
+  
+  sortAndDisplayPosts(filteredPosts);
+}
+
+// 기존 loadFeedPosts 함수에서 정렬 적용 부분 수정
+function loadFeedPosts() {
+  if (!feedInitialized) {
+    db.ref('globalFeed').orderByChild('timestamp').on('value', snapshot => {
+      allPosts = [];
+      const posts = snapshot.val();
+      
+      if (posts) {
+        for (let postId in posts) {
+          allPosts.push({
+            id: postId,
+            ...posts[postId]
+          });
+        }
+      }
+      
+      if (!feedInitialized) {
+        currentPage = 0;
+        displayedPosts = [];
+        sortAndDisplayPosts(allPosts); // 정렬 적용
+        feedInitialized = true;
+      } else {
+        refreshDisplayedPosts();
+      }
+    });
+  } else {
+    refreshDisplayedPosts();
   }
 }
 
