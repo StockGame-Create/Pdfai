@@ -2046,7 +2046,7 @@ body.fullscreen .copyright-btn {
   </div>
 </div>
 
-<div id="shareButton" onclick="openShareModal()">♡</div>
+<div id="shareButton" onclick="openShareModalheart()">♡</div>
 
 <!-- 공유하기 모달 -->
 <div id="shareModal" class="modal">
@@ -4319,7 +4319,7 @@ function searchRooms() {
 }
 
 // 공유하기 관련 함수들
-function openShareModal() {
+function openShareModalheart() {
   const currentUrl = window.location.href;
   document.getElementById("shareLink").value = currentUrl;
   generateQRCode(currentUrl);
