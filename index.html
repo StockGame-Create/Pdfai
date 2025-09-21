@@ -2128,6 +2128,24 @@ body.fullscreen .copyright-btn {
   animation: newLabelPulse 2s infinite;
 }
 
+@media (max-width: 768px) {
+  #shareButton, #chatbotButton {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2em;
+  }
+  
+  #chatbotButton {
+    bottom: 80px;
+    display: none; /* 이 줄 추가 */
+  }
+  
+  .chatbot-new-label {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+}
+
 @keyframes newLabelPulse {
   0%, 100% { 
     transform: translateX(-50%) scale(1); 
@@ -2877,7 +2895,7 @@ function openUnvulChatBot() {
   
   if (confirm(warningMessage)) {
     // 사용자가 확인을 누르면 챗봇 사이트로 이동
-    window.location.href = 'https://stockgame-create.github.io/UnvulChatbot/';
+    window.location.href = 'https://example.com';
   }
   // 취소를 누르면 아무것도 하지 않음 (현재 페이지 유지)
 }
