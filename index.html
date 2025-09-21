@@ -13,6 +13,25 @@
     /* 🔥 전체 배경 */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+    .message {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.message:hover {
+  background-color: rgba(255,255,255,0.3) !important;
+}
+
+.message.copied {
+  background-color: rgba(0, 255, 0, 0.2) !important;
+  animation: copyFlash 0.5s ease;
+}
+
+@keyframes copyFlash {
+  0% { background-color: rgba(0, 255, 0, 0.4); }
+  100% { background-color: rgba(255,255,255,0.2); }
+}
+
 
     /* 모바일 반응형 */
 @media (max-width: 768px) {
@@ -67,9 +86,9 @@
   --tuesday-bg: radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 101, 101, 0.3) 0%, transparent 50%);
   --wednesday-bg: radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.3) 0%, transparent 50%);
   --thursday-bg: radial-gradient(circle at 20% 80%, rgba(251, 146, 60, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(245, 158, 11, 0.3) 0%, transparent 50%);
-  --friday-bg: radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
-  --saturday-bg: radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(219, 39, 119, 0.3) 0%, transparent 50%);
-  --sunday-bg: radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.3) 0%, transparent 50%);
+  --sunday-bg: radial-gradient(circle at 20% 80%, rgba(144, 179, 48, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%);
+  --friday-bg: radial-gradient(circle at 20% 80%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(219, 39, 119, 0.3) 0%, transparent 50%);
+  --saturday-bg: radial-gradient(circle at 20% 80%, rgba(6, 182, 212, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(14, 165, 233, 0.3) 0%, transparent 50%);
   --nickname-color: #00ffd5;
   --message-bg: rgba(255, 255, 255, 0.2);
 }
@@ -1034,24 +1053,32 @@ body {
     }
 
     /* 공유하기 버튼 (하단 고정) */
+/* 공유하기 버튼 (크기 확대) */
 #shareButton {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  width: 35px;
-  height: 35px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #3a3a3a, #222222);
+  border: 2px solid rgba(255,255,255,0.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.8em;
-  color: rgba(255,255,255,0.6);
-  transition: all 0.2s ease;
+  font-size: 1.3em;
+  color: white;
+  transition: all 0.3s ease;
   backdrop-filter: blur(10px);
   z-index: 100;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+#shareButton:hover {
+  background: linear-gradient(135deg, #ffa500, #ff6b6b);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.5);
 }
 
 #notificationToggle {
@@ -1977,12 +2004,163 @@ body.fullscreen .copyright-btn {
   cursor: pointer;
   font-weight: bold;
 }
+
+.chatbot-message {
+  margin-bottom: 15px;
+  padding: 15px 20px;
+  border-radius: 18px;
+  animation: slideIn 0.3s ease-out;
+  word-wrap: break-word;
+  line-height: 1.5;
+  max-width: 80%;
+}
+
+.user-chatbot-message {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  align-self: flex-end;
+  margin-left: auto;
+}
+
+.bot-chatbot-message {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  align-self: flex-start;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.bot-chatbot-message.streaming {
+  background: rgba(0, 255, 213, 0.1);
+  border-color: #00ffd5;
+}
+
+.chatbot-cursor {
+  color: #00ffd5;
+  animation: blink 1s infinite;
+  font-weight: bold;
+}
+
+.chatbot-message strong {
+  color: #00ffd5;
+}
+
+.chatbot-message code {
+  background: rgba(255,255,255,0.2);
+  color: #ffa500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+}
+
+.chatbot-message pre {
+  background: rgba(0,0,0,0.3);
+  color: #ffffff;
+  padding: 15px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 10px 0;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+#chatbotInput:focus {
+  border-color: rgba(0, 255, 213, 0.5);
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 15px rgba(0, 255, 213, 0.2);
+}
+
+#chatbotInput::placeholder {
+  color: rgba(255,255,255,0.6);
+}
+
+#chatbotSend:hover {
+  transform: scale(1.05);
+  box-shadow: 0 5px 15px rgba(0, 210, 255, 0.4);
+}
+
+#chatbotSend:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+#chatbotButton {
+  position: fixed;
+  bottom: 85px; /* 공유 버튼 위에 위치 */
+  right: 20px;
+  width: 55px;
+  height: 55px;
+  background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.3em;
+  color: white;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  box-shadow: 0 4px 15px rgba(0, 210, 255, 0.3);
+}
+
+#chatbotButton:hover {
+  background: linear-gradient(135deg, #3a7bd5, #00d2ff);
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 210, 255, 0.5);
+}
+
+.chatbot-new-label {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, #ff6b6b, #ffa500);
+  color: white;
+  font-size: 8px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  animation: newLabelPulse 2s infinite;
+}
+
+@keyframes newLabelPulse {
+  0%, 100% { 
+    transform: translateX(-50%) scale(1); 
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  }
+  50% { 
+    transform: translateX(-50%) scale(1.05); 
+    box-shadow: 0 3px 12px rgba(255, 107, 107, 0.6);
+  }
+}
+
+@media (max-width: 768px) {
+  #shareButton, #chatbotButton {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2em;
+  }
+  
+  #chatbotButton {
+    bottom: 80px;
+  }
+  
+  .chatbot-new-label {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+}
   </style>
 </head>
 <body>
 
   <h2>💬 Unvul Chat !!</h2>
-  <h4>(Made by 범서) Ver. 5.12 (pre release)</h4>
+  <h4>(Made by 범서) Ver. 7.42 (pre release)</h4>
   
 
 
@@ -2166,12 +2344,12 @@ body.fullscreen .copyright-btn {
   <div class="tool-status">사용 가능</div>
 </div>
 
-<div class="ez-tool-card disabled">
-        <div class="tool-icon">🌟</div>
-        <h4>도구 4</h4>
-        <p>곧 추가될 예정입니다</p>
-        <div class="tool-status">준비 중</div>
-      </div>
+<div class="ez-tool-card" onclick="openUnvulChatBot()">
+  <div class="tool-icon">🤖</div>
+  <h4>Unvul-ChatBot!!</h4>
+  <p>AI 챗봇으로 대화하고 질문해보세요</p>
+  <div class="tool-status">사용 가능</div>
+</div>
 
       <div class="ez-tool-card disabled">
         <div class="tool-icon">🌟</div>
@@ -2451,6 +2629,8 @@ body.fullscreen .copyright-btn {
     <button onclick="openQuizModal(); closeToolsMenu()">❓ 퀴즈</button>
     <button onclick="openRandomModal(); closeToolsMenu()">🎲 랜덤뽑기</button>
     <button onclick="openBannedWordsModal(); closeToolsMenu()">🚫 금지어</button>
+    <!-- 기존 버튼들 다음에 추가 -->
+<button onclick="openChatBot(); closeToolsMenu()">🤖 Unvul ChatBot !!</button>
     <button id="notificationToggle" onclick="toggleNotifications()">🔔 알림 OFF (테스트 중)</button>
     <button onclick="exitRoom(); closeToolsMenu()" class="danger-btn">나가기</button>
   </div>
@@ -2465,6 +2645,12 @@ body.fullscreen .copyright-btn {
   </div>
   
   <div id="quizResultButtons"></div>
+</div>
+
+<!-- 챗봇 버튼 (공유 버튼 위에) -->
+<div id="chatbotButton" onclick="openChatBot()">
+  <div class="chatbot-new-label">New</div>
+  🤖
 </div>
 
 
@@ -2549,6 +2735,51 @@ body.fullscreen .copyright-btn {
     <input type="password" id="removePasswordInput" placeholder="관리자 비밀번호 입력">
     <button onclick="confirmRemoveBannedWord()">삭제하기</button>
     <button onclick="closeRemoveBannedWordModal()">취소</button>
+  </div>
+</div>
+
+<!-- AI 챗봇 모달 -->
+<div id="chatbotModal" class="modal">
+  <div class="modal-content" style="max-width: 800px; height: 80vh; max-height: 600px; display: flex; flex-direction: column;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.2);">
+      <h3 style="margin: 0; background: linear-gradient(90deg, #00d2ff, #3a7bd5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">🤖 Unvul ChatBot !! / 고급모델 (gpt-4o) 사용!</h3>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #00ffd5;">
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #4CAF50; animation: pulse 2s infinite;"></div>
+          <span>온라인</span>
+        </div>
+        <span class="close" onclick="closeChatBot()">&times;</span>
+      </div>
+    </div>
+    
+    <div id="chatbotMessages" style="flex: 1; overflow-y: auto; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px; margin-bottom: 15px;">
+      <div style="text-align: center; color: rgba(255,255,255,0.7); font-style: italic; margin: 30px 0;">
+        <h4 style="color: #00ffd5; margin-bottom: 10px;">환영합니다!</h4>
+        <p>Unvul AI 챗봇입니다. 무엇이든 물어보세요!</p>
+        <p style="font-size: 12px; opacity: 0.8;">GPT-4o 모델 사용 중...</p>
+      </div>
+    </div>
+    
+    <div id="chatbotTyping" style="display: none; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 15px; margin-bottom: 15px;">
+      <div style="display: flex; gap: 4px; align-items: center;">
+        <span style="color: rgba(255,255,255,0.7);">AI가 입력중</span>
+        <div style="display: flex; gap: 3px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #00ffd5; animation: bounce 1.4s infinite ease-in-out both;"></span>
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #00ffd5; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.16s;"></span>
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #00ffd5; animation: bounce 1.4s infinite ease-in-out both; animation-delay: -0.32s;"></span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: flex-end;">
+      <textarea id="chatbotInput" placeholder="AI에게 질문해보세요..." 
+                style="flex: 1; padding: 15px; border: 2px solid rgba(255,255,255,0.2); border-radius: 20px; background: rgba(255,255,255,0.1); color: white; resize: none; min-height: 50px; max-height: 100px; outline: none;"
+                rows="1"></textarea>
+      <button id="chatbotSend" onclick="sendChatbotMessage()" 
+              style="width: 50px; height: 50px; border: none; border-radius: 50%; background: linear-gradient(135deg, #00d2ff, #3a7bd5); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+        ➤
+      </button>
+    </div>
   </div>
 </div>
 
@@ -2639,6 +2870,17 @@ function setDayBackground() {
 
 // 페이지 로드시 배경 설정
 setDayBackground();
+
+// Unvul-ChatBot 열기 함수 (경고 포함)
+function openUnvulChatBot() {
+  const warningMessage = `⚠️ 주의사항\n\n챗봇 사이트로 이동합니다.\n\n현재 상태(이름, 커스터마이징 설정 등)가 저장되지 않습니다.\n\n계속하시겠습니까?`;
+  
+  if (confirm(warningMessage)) {
+    // 사용자가 확인을 누르면 챗봇 사이트로 이동
+    window.location.href = 'https://example.com';
+  }
+  // 취소를 누르면 아무것도 하지 않음 (현재 페이지 유지)
+}
 
 // 통합된 색상 업데이트 함수
 function updateRoomColors() {
@@ -3008,7 +3250,15 @@ document.getElementById('messageInput').addEventListener('keydown', function(e) 
         } else {
   div.className = "message";
 const processedText = detectAndConvertLinks(msg.text.replace(/\n/g, '<br>'));
+// 이렇게 변경
 div.innerHTML = `<strong>${msg.sender}:</strong> ${processedText}`;
+
+// 클릭 이벤트 추가 (div 생성 후)
+if (msg.sender !== username) {
+  div.addEventListener('click', () => {
+    handleMessageClick(div, msg.text, msg.sender);
+  });
+}
   
   if (msg.image) {
     div.classList.add('has-image'); // 클래스 추가
@@ -5110,6 +5360,278 @@ function generateShareUrl(type, encodedQuery) {
     default: return '#';
   }
 }
+
+// 클립보드 복사 함수
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    // 구형 브라우저 대응
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      return true;
+    } catch (fallbackErr) {
+      console.error('클립보드 복사 실패:', fallbackErr);
+      return false;
+    }
+  }
+}
+
+// 메시지 클릭 이벤트 처리
+function handleMessageClick(messageElement, messageText, sender) {
+  // 본인 메시지는 복사하지 않음
+  if (sender === username) return;
+  
+  copyToClipboard(messageText).then(success => {
+    if (success) {
+      // 복사 성공 시각적 피드백
+      messageElement.classList.add('copied');
+      setTimeout(() => {
+        messageElement.classList.remove('copied');
+      }, 500);
+      
+      // 선택적: 토스트 메시지
+      showToast(`${sender}의 메시지가 복사되었습니다`);
+    }
+  });
+}
+
+// 토스트 메시지 함수 (선택사항)
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    z-index: 9999;
+    font-size: 14px;
+  `;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    document.body.removeChild(toast);
+  }, 2000);
+}
+
+let chatbotReady = false;
+let isChatbotTyping = false;
+
+// 챗봇 모달 열기
+function openChatBot() {
+  document.getElementById("chatbotModal").style.display = "block";
+  if (!chatbotReady) {
+    initializeChatBot();
+  }
+}
+
+// 챗봇 모달 닫기
+function closeChatBot() {
+  document.getElementById("chatbotModal").style.display = "none";
+}
+
+// 챗봇 초기화
+async function initializeChatBot() {
+  try {
+    // Puter.js 로드
+    if (!window.puter) {
+      await loadPuterScript();
+      await waitForPuter();
+    }
+    
+    chatbotReady = true;
+    console.log('챗봇 준비 완료');
+    
+    // 환영 메시지 업데이트
+    const welcomeMsg = document.querySelector('#chatbotMessages > div');
+    if (welcomeMsg) {
+      welcomeMsg.innerHTML = `
+        <h4 style="color: #00ffd5; margin-bottom: 10px;">준비 완료!</h4>
+        <p>Unvul 챗봇이 준비되었습니다. 무엇이든 물어보세요!</p>
+        <p style="font-size: 12px; opacity: 0.8;">✅ AI 연결됨</p>
+      `;
+    }
+  } catch (error) {
+    console.error('챗봇 초기화 실패:', error);
+    addChatbotMessage('⚠️ AI 서비스 연결에 실패했습니다. 다시 시도해주세요.', 'bot', true);
+  }
+}
+
+// Puter 스크립트 로드
+function loadPuterScript() {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://js.puter.com/v2/';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// Puter 대기
+function waitForPuter() {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Puter 로딩 타임아웃')), 10000);
+    
+    const checkPuter = () => {
+      if (window.puter && window.puter.ai) {
+        clearTimeout(timeout);
+        resolve();
+      } else {
+        setTimeout(checkPuter, 100);
+      }
+    };
+    
+    checkPuter();
+  });
+}
+
+// 챗봇 메시지 전송
+async function sendChatbotMessage() {
+  const input = document.getElementById('chatbotInput');
+  const message = input.value.trim();
+  
+  if (!message || isChatbotTyping) return;
+  
+  if (!chatbotReady) {
+    addChatbotMessage('🔄 AI 서비스 연결 중입니다. 잠시 후 다시 시도해주세요.', 'bot', true);
+    return;
+  }
+  
+  addChatbotMessage(message, 'user');
+  input.value = '';
+  input.style.height = 'auto';
+  setChatbotTyping(true);
+  
+  try {
+    const response = await puter.ai.chat(message, {
+      model: "gpt-4o",
+      stream: true
+    });
+    
+    setChatbotTyping(false);
+    
+    // 스트리밍 메시지 컨테이너 생성
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chatbot-message bot-chatbot-message streaming';
+    messageDiv.innerHTML = '<span class="chatbot-cursor">▋</span>';
+    document.getElementById('chatbotMessages').appendChild(messageDiv);
+    scrollChatbotToBottom();
+    
+    let fullText = '';
+    let isFirstChunk = true;
+    
+    for await (const chunk of response) {
+      if (isFirstChunk) {
+        messageDiv.innerHTML = '';
+        isFirstChunk = false;
+      }
+      
+      let newText = '';
+      if (typeof chunk === 'string') {
+        newText = chunk;
+      } else if (chunk && chunk.text) {
+        newText = chunk.text;
+      } else if (chunk && chunk.content) {
+        newText = chunk.content;
+      } else if (chunk && chunk.choices && chunk.choices[0]) {
+        newText = chunk.choices[0].delta?.content || chunk.choices[0].text || '';
+      }
+      
+      if (newText) {
+        fullText += newText;
+        const formattedText = formatChatbotText(fullText);
+        messageDiv.innerHTML = formattedText + '<span class="chatbot-cursor">▋</span>';
+        scrollChatbotToBottom();
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+    }
+    
+    messageDiv.innerHTML = formatChatbotText(fullText);
+    messageDiv.classList.remove('streaming');
+    
+  } catch (error) {
+    setChatbotTyping(false);
+    console.error('챗봇 오류:', error);
+    addChatbotMessage('오류가 발생했습니다: ' + error.message, 'bot', true);
+  }
+}
+
+// 챗봇 메시지 추가
+function addChatbotMessage(content, type, isError = false) {
+  const messageDiv = document.createElement('div');
+  messageDiv.className = `chatbot-message ${type}-chatbot-message ${isError ? 'error-message' : ''}`;
+  
+  if (type === 'bot' && !isError) {
+    messageDiv.innerHTML = formatChatbotText(content);
+  } else {
+    messageDiv.textContent = content;
+  }
+  
+  document.getElementById('chatbotMessages').appendChild(messageDiv);
+  scrollChatbotToBottom();
+}
+
+// 텍스트 포맷팅
+function formatChatbotText(text) {
+  if (!text) return '';
+  
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
+// 타이핑 상태 설정
+function setChatbotTyping(typing) {
+  isChatbotTyping = typing;
+  document.getElementById('chatbotSend').disabled = typing;
+  document.getElementById('chatbotTyping').style.display = typing ? 'block' : 'none';
+  
+  if (typing) {
+    scrollChatbotToBottom();
+  }
+}
+
+// 스크롤
+function scrollChatbotToBottom() {
+  const container = document.getElementById('chatbotMessages');
+  setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+  }, 100);
+}
+
+// Enter 키 이벤트
+document.addEventListener('DOMContentLoaded', function() {
+  const chatbotInput = document.getElementById('chatbotInput');
+  if (chatbotInput) {
+    chatbotInput.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatbotMessage();
+      }
+    });
+    
+    chatbotInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+  }
+});
   </script>
 
 
