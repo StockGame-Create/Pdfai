@@ -2221,6 +2221,144 @@ body.fullscreen .copyright-btn {
   background: rgba(255,255,255,0.1);
   color: white;
 }
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .tools-menu-content {
+    width: 300px;
+    padding: 25px;
+  }
+  
+  .tools-menu button {
+    padding: 15px;
+    font-size: 16px;
+    margin: 10px 0;
+  }
+  
+  /* 파일 공유함 모바일 최적화 */
+  #fileShareSection .feed-container {
+    margin: 10px;
+    padding: 15px;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+  
+  .file-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 15px;
+  }
+  
+  .file-icon {
+    margin-bottom: 10px;
+    align-self: center;
+  }
+  
+  .file-info {
+    width: 100%;
+  }
+  
+  .file-info h4 {
+    font-size: 16px;
+    word-break: break-word;
+  }
+  
+  .file-info p {
+    font-size: 14px;
+    word-break: break-word;
+  }
+  
+  .file-info button {
+    width: 100%;
+    margin-top: 15px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tools-menu-content {
+    width: 85vw;
+    padding: 20px 15px;
+  }
+  
+  /* 파일 공유함 초소형 화면 대응 */
+  #fileShareSection {
+    padding: 5px;
+  }
+  
+  #fileShareSection .feed-container {
+    margin: 5px;
+    padding: 10px;
+    max-height: 90vh;
+    border-radius: 10px;
+  }
+  
+  #fileShareSection h3 {
+    font-size: 18px;
+  }
+  
+  .create-post-form {
+    padding: 15px;
+  }
+  
+  .create-post-form h4 {
+    font-size: 16px;
+  }
+  
+  .hashtag-input, .post-textarea {
+    font-size: 16px; /* iOS 확대 방지 */
+  }
+  
+  .file-item {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  
+  .file-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+  }
+  
+  .file-info h4 {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .file-info p {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  #loadMoreFilesBtn {
+    font-size: 16px;
+    padding: 12px;
+  }
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .tools-menu {
+    padding: 20px;
+    align-items: flex-start;
+    justify-content: flex-start;
+  }
+  
+  .tools-menu-content {
+    width: calc(100vw - 40px);
+    max-width: 350px;
+    padding: 20px;
+    margin-top: 50px;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+  }
+  
+  .tools-menu button {
+    padding: 15px;
+    font-size: 16px;
+    margin: 8px 0;
+  }
+}
   </style>
 </head>
 <body>
