@@ -2173,6 +2173,54 @@ body.fullscreen .copyright-btn {
     padding: 1px 4px;
   }
 }
+
+.file-item {
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255,255,255,0.2);
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.file-icon {
+  width: 60px;
+  height: 60px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.file-info {
+  flex: 1;
+}
+
+.fileshare-btn:hover {
+  border-color: rgba(139, 69, 19, 0.5);
+}
+
+#linkInputArea {
+  margin: 15px 0;
+  padding: 15px;
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.05);
+}
+
+#linkInput {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
   </style>
 </head>
 <body>
@@ -2217,15 +2265,20 @@ body.fullscreen .copyright-btn {
           <span class="action-icon">🌍</span>
           <span class="action-text">글로벌 피드</span>
         </button>
-        <button onclick="showInquiry()" class="action-card inquiry-btn">
+                <button onclick="showFileShare()" class="action-card fileshare-btn">
+          <span class="action-icon">📁</span>
+          <span class="action-text">파일 공유함</span>
+        </button>
+<div onclick="showInquiry()" class="action-card inquiry-btn">
   <span class="action-icon">📞</span>
   <span class="action-text">문의하기</span>
-</button>
-<button onclick="showEzUnvul()" class="action-card ez-btn">
+</div>
+<div onclick="showEzUnvul()" class="action-card ez-btn">
   <span class="action-icon">✔️</span>
   <span class="action-text">이지-Unvul</span>
-</button>
-        </button>
+</div>
+
+        
       </div>
     </div>
   </div>
@@ -2298,6 +2351,50 @@ body.fullscreen .copyright-btn {
     <!-- 피드 게시물들 -->
     <div id="feedPosts"></div>
   </div>
+</div>
+
+<!-- 파일 공유함 화면 -->
+<div id="fileShareSection" style="display:none;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h3>📁 파일 공유함</h3>
+    <button onclick="hideFileShare()" class="danger-btn">뒤로가기</button>
+  </div>
+  
+<div class="feed-container">
+  <!-- 검색 및 링크 모드 -->
+  <div class="feed-controls">
+    <input type="text" id="fileSearch" class="feed-search" placeholder="파일명, 설명, 업로더로 검색..." onkeyup="searchFiles()">
+    <label style="color: white; display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+      <input type="checkbox" id="linkMode" onchange="toggleLinkMode()" style="width: auto;">
+      링크 모드
+    </label>
+  </div>
+
+  <!-- 기존 파일 업로드 영역 다음에 추가 -->
+<div id="linkInputArea" style="display: none;">
+  <input type="url" id="linkInput" placeholder="공유할 링크 URL을 입력하세요...">
+  <small style="color: #aaa; display: block; margin-top: 8px;">
+    YouTube, Google Drive, Dropbox, GitHub 등 모든 링크 가능
+  </small>
+</div>
+  
+  <!-- 파일 업로드 폼 -->
+  <div class="create-post-form">
+    <h4>새 파일 업로드</h4>
+    <input type="file" id="fileInput" style="margin-bottom: 15px;">
+    <input type="text" id="fileDescription" class="hashtag-input" placeholder="파일 설명">
+    <!-- 링크 입력 영역은 JavaScript로 동적 생성 -->
+    <label style="color: white; margin: 10px 0; display: flex; align-items: center; gap: 8px;">
+      <input type="checkbox" id="filePassword" style="width: auto;">
+      비밀번호 보호
+    </label>
+    <input type="password" id="filePasswordInput" class="hashtag-input" placeholder="비밀번호 (선택사항)" style="display: none;">
+    <button onclick="uploadFile()" class="success-btn">업로드</button>
+  </div>
+  
+  <!-- 파일 목록 -->
+  <div id="fileList"></div>
+</div>
 </div>
 
 <!-- 문의하기 화면 -->
@@ -2877,6 +2974,29 @@ body.fullscreen .copyright-btn {
     const db = firebase.database();
     const storage = firebase.storage();
 
+function showInquiry() {
+  document.getElementById("roomSection").style.display = "none";
+  const inquirySection = document.getElementById("inquirySection");
+  if (inquirySection) {
+    inquirySection.style.display = "block";
+    inquirySection.style.visibility = "visible";
+    inquirySection.style.opacity = "1";
+    console.log("inquirySection을 표시했습니다");
+  }
+}
+
+function showEzUnvul() {
+  console.log("showEzUnvul 실행됨");
+  document.getElementById("roomSection").style.display = "none";
+  const ezSection = document.getElementById("ezUnvulSection");
+  if (ezSection) {
+    ezSection.style.display = "block";
+    console.log("ezUnvulSection 표시됨");
+  } else {
+    console.log("ezUnvulSection을 찾을 수 없음!");
+  }
+}
+
     // 요일별 배경 설정
 function setDayBackground() {
   const today = new Date().getDay(); // 0=일요일, 1=월요일, ...
@@ -3130,10 +3250,7 @@ function exitRoom() {
       }
     }
 
-    function showEzUnvul() {
-  document.getElementById("roomSection").style.display = "none";
-  document.getElementById("ezUnvulSection").style.display = "block";
-}
+
 
 function hideEzUnvul() {
   document.getElementById("ezUnvulSection").style.display = "none";
@@ -5650,6 +5767,483 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+// 파일 공유함 변수들
+let displayedFiles = [];
+let allFiles = [];
+let currentFilePage = 0;
+const FILES_PER_INITIAL_LOAD = 5;
+const FILES_PER_LOAD_MORE = 3;
+
+// 파일 공유함 표시/숨기기
+function showFileShare() {
+  document.getElementById("roomSection").style.display = "none";
+  document.getElementById("fileShareSection").style.display = "block";
+  loadSharedFiles();
+}
+
+function hideFileShare() {
+  document.getElementById("fileShareSection").style.display = "none";
+  document.getElementById("roomSection").style.display = "block";
+  // 상태 초기화
+  displayedFiles = [];
+  allFiles = [];
+  currentFilePage = 0;
+}
+
+// Base64 변환 함수
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+    reader.readAsDataURL(file);
+  });
+}
+
+// 링크 업로드 모드 토글
+function toggleLinkMode() {
+  const isLinkMode = document.getElementById('linkMode').checked;
+  const fileUploadArea = document.querySelector('.file-upload-area');
+  const fileInput = document.getElementById('fileInput');
+  const linkInputArea = document.getElementById('linkInputArea');
+  
+  if (isLinkMode) {
+    fileUploadArea.style.display = 'none';
+    if (!linkInputArea) {
+      // 링크 입력 영역 생성
+      const linkDiv = document.createElement('div');
+      linkDiv.id = 'linkInputArea';
+      linkDiv.innerHTML = `
+        <input type="url" id="linkInput" class="hashtag-input" placeholder="공유할 링크 URL을 입력하세요..." style="margin-bottom: 10px;">
+        <small style="color: #aaa;">YouTube, Google Drive, Dropbox 등 모든 링크 가능</small>
+      `;
+      fileUploadArea.parentNode.insertBefore(linkDiv, fileUploadArea.nextSibling);
+    } else {
+      linkInputArea.style.display = 'block';
+    }
+  } else {
+    fileUploadArea.style.display = 'block';
+    if (linkInputArea) {
+      linkInputArea.style.display = 'none';
+    }
+  }
+}
+
+// 파일 업로드 (링크 모드 포함)
+async function uploadFile() {
+  const isLinkMode = document.getElementById('linkMode').checked;
+  const description = document.getElementById('fileDescription').value.trim();
+  const needPassword = document.getElementById('filePassword').checked;
+  const password = document.getElementById('filePasswordInput').value;
+  
+  if (needPassword && !password) {
+    alert('비밀번호를 입력해주세요.');
+    return;
+  }
+  
+  if (isLinkMode) {
+    // 링크 모드
+    const linkUrl = document.getElementById('linkInput').value.trim();
+    if (!linkUrl) {
+      alert('링크 URL을 입력해주세요.');
+      return;
+    }
+    
+    // URL 유효성 검사
+try {
+  // http:// 또는 https://가 없으면 자동 추가
+  let processedUrl = linkUrl;
+  if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+    processedUrl = 'https://' + linkUrl;
+  }
+  
+  new URL(processedUrl); // 유효성 검사
+  
+  // 처리된 URL로 업데이트
+  const linkData = {
+    fileName: getLinkDisplayName(processedUrl),
+    fileSize: 0,
+    fileType: 'link',
+    linkUrl: processedUrl, // 여기도 processedUrl 사용
+    description: description,
+    uploader: username,
+    timestamp: Date.now(),
+    password: needPassword ? password : null,
+    isLink: true
+  };
+  
+} catch (e) {
+  alert('올바른 URL 형식을 입력해주세요. (예: google.com 또는 https://google.com)');
+  return;
+}
+    
+    const linkData = {
+      fileName: getLinkDisplayName(linkUrl),
+      fileSize: 0,
+      fileType: 'link',
+      linkUrl: linkUrl,
+      description: description,
+      uploader: username,
+      timestamp: Date.now(),
+      password: needPassword ? password : null,
+      method: 'link'
+    };
+    
+    await db.ref('sharedFiles').push(linkData);
+    alert('링크가 공유되었습니다!');
+    resetFileForm();
+    
+  } else {
+    // 파일 모드
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files[0]) {
+      alert('파일을 선택해주세요.');
+      return;
+    }
+    
+    const file = fileInput.files[0];
+    
+    // 용량 제한 22.5MB
+    if (file.size > 22.5 * 1024 * 1024) {
+      alert('파일 크기는 22.5MB를 초과할 수 없습니다.\n큰 파일은 압축(ZIP)해서 올려주세요.');
+      return;
+    }
+    
+    try {
+      const base64Data = await fileToBase64(file);
+      
+      const fileData = {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        base64Data: base64Data,
+        description: description,
+        uploader: username,
+        timestamp: Date.now(),
+        password: needPassword ? password : null,
+        method: 'base64'
+      };
+      
+      await db.ref('sharedFiles').push(fileData);
+      alert('파일이 업로드되었습니다!');
+      resetFileForm();
+      
+    } catch (error) {
+      console.error('업로드 오류:', error);
+      alert('파일 업로드에 실패했습니다: ' + error.message);
+    }
+  }
+}
+
+// 링크 표시명 생성
+function getLinkDisplayName(url) {
+  try {
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname.replace('www.', '');
+    
+    // 특별한 서비스들 감지
+    if (domain.includes('youtube.com') || domain.includes('youtu.be')) {
+      return '🎥 YouTube 링크';
+    } else if (domain.includes('drive.google.com')) {
+      return '📁 Google Drive 링크';
+    } else if (domain.includes('dropbox.com')) {
+      return '📦 Dropbox 링크';
+    } else if (domain.includes('github.com')) {
+      return '💾 GitHub 링크';
+    } else if (domain.includes('docs.google.com')) {
+      return '📝 Google Docs 링크';
+    } else if (domain.includes('instagram.com')) {
+      return '📸 Instagram 링크';
+    } else if (domain.includes('twitter.com') || domain.includes('x.com')) {
+      return '🐦 Twitter 링크';
+    } else if (domain.includes('facebook.com')) {
+      return '👥 Facebook 링크';
+    } else if (domain.includes('tiktok.com')) {
+      return '🎵 TikTok 링크';
+    } else if (domain.includes('discord.com') || domain.includes('discord.gg')) {
+      return '💬 Discord 링크';
+    } else {
+      // 알려지지 않은 도메인도 지원 - 도메인명 표시
+      return `🔗 ${domain}`;
+    }
+  } catch (e) {
+    // URL 파싱이 실패해도 일반 링크로 처리
+    return '🔗 웹 링크';
+  }
+}
+
+// 파일 목록 로드 (페이지네이션 포함)
+function loadSharedFiles() {
+  db.ref('sharedFiles').orderByChild('timestamp').on('value', snapshot => {
+    const files = snapshot.val();
+    
+    if (!files) {
+      document.getElementById('fileList').innerHTML = '<p style="color: #aaa; text-align: center;">공유된 파일이 없습니다.</p>';
+      return;
+    }
+    
+    // 최신순으로 정렬
+    allFiles = Object.keys(files).map(key => ({
+      id: key,
+      ...files[key]
+    })).sort((a, b) => b.timestamp - a.timestamp);
+    
+    // 초기 로드
+    currentFilePage = 0;
+    displayedFiles = [];
+    loadMoreFiles();
+  });
+}
+
+// 더 많은 파일 로드
+function loadMoreFiles() {
+  const startIndex = currentFilePage === 0 ? 0 : FILES_PER_INITIAL_LOAD + (currentFilePage - 1) * FILES_PER_LOAD_MORE;
+  const loadCount = currentFilePage === 0 ? FILES_PER_INITIAL_LOAD : FILES_PER_LOAD_MORE;
+  const endIndex = startIndex + loadCount;
+  
+  const newFiles = allFiles.slice(startIndex, endIndex);
+  displayedFiles = [...displayedFiles, ...newFiles];
+  
+  displayFiles();
+  currentFilePage++;
+  
+  updateLoadMoreButton();
+}
+
+// 파일 목록 표시
+function displayFiles() {
+  const fileList = document.getElementById('fileList');
+  
+  // 더보기 버튼 제거
+  const existingBtn = document.getElementById('loadMoreFilesBtn');
+  if (existingBtn) existingBtn.remove();
+  
+  // 파일 요소들만 제거하고 다시 생성
+  const fileElements = fileList.querySelectorAll('.file-item');
+  fileElements.forEach(el => el.remove());
+  
+  displayedFiles.forEach(file => {
+    const fileDiv = createFileElement(file);
+    fileList.appendChild(fileDiv);
+  });
+  
+  updateLoadMoreButton();
+}
+
+// 더보기 버튼 업데이트
+function updateLoadMoreButton() {
+  const fileList = document.getElementById('fileList');
+  
+  // 기존 더보기 버튼 제거
+  const existingBtn = document.getElementById('loadMoreFilesBtn');
+  if (existingBtn) existingBtn.remove();
+  
+  // 더 불러올 파일이 있으면 더보기 버튼 추가
+  if (displayedFiles.length < allFiles.length) {
+    const loadMoreBtn = document.createElement('button');
+    loadMoreBtn.id = 'loadMoreFilesBtn';
+    loadMoreBtn.className = 'success-btn';
+    loadMoreBtn.style.cssText = 'width: 100%; margin-top: 20px; padding: 15px;';
+    loadMoreBtn.textContent = `더보기 (${allFiles.length - displayedFiles.length}개 남음)`;
+    loadMoreBtn.onclick = loadMoreFiles;
+    fileList.appendChild(loadMoreBtn);
+  }
+}
+
+// 파일 검색
+function searchFiles() {
+  const searchTerm = document.getElementById('fileSearch').value.trim().toLowerCase();
+  
+  if (!searchTerm) {
+    // 검색어가 없으면 전체 목록 표시
+    currentFilePage = 0;
+    displayedFiles = [];
+    loadMoreFiles();
+    return;
+  }
+  
+  // 검색 결과 필터링
+  const filteredFiles = allFiles.filter(file => {
+    const fileName = file.fileName.toLowerCase();
+    const description = (file.description || '').toLowerCase();
+    const uploader = file.uploader.toLowerCase();
+    
+    return fileName.includes(searchTerm) || 
+           description.includes(searchTerm) || 
+           uploader.includes(searchTerm);
+  });
+  
+  displayedFiles = filteredFiles;
+  displayFiles();
+  
+  // 검색 결과에서는 더보기 버튼 제거
+  const existingBtn = document.getElementById('loadMoreFilesBtn');
+  if (existingBtn) existingBtn.remove();
+}
+
+// 파일 요소 생성 (링크 지원 추가)
+function createFileElement(file) {
+  const fileDiv = document.createElement('div');
+  fileDiv.className = 'file-item';
+  
+  const fileIcon = file.method === 'link' ? '🔗' : getFileIcon(file.fileName);
+  const fileSize = file.method === 'link' ? '링크' : formatFileSize(file.fileSize);
+  const uploadTime = formatTime(file.timestamp);
+  const hasPassword = file.password ? '🔒' : '';
+  
+  fileDiv.innerHTML = `
+    <div class="file-icon">${fileIcon}</div>
+    <div class="file-info">
+      <h4>${file.fileName} ${hasPassword}</h4>
+      <p style="color: #aaa;">${file.description || '설명 없음'}</p>
+      <p style="font-size: 0.9em; color: #999;">
+        크기: ${fileSize} | 업로더: ${file.uploader} | ${uploadTime}
+      </p>
+      <button onclick="downloadFile('${file.id}')" class="success-btn" style="margin-top: 10px;">
+        ${file.method === 'link' ? '링크 열기' : '다운로드'}
+      </button>
+    </div>
+  `;
+  
+  return fileDiv;
+}
+
+// 파일 확장자별 아이콘
+function getFileIcon(fileName) {
+  const extension = fileName.split('.').pop().toLowerCase();
+  
+  const icons = {
+    'pdf': '📄',
+    'doc': '📝', 'docx': '📝',
+    'xls': '📊', 'xlsx': '📊',
+    'ppt': '📈', 'pptx': '📈',
+    'txt': '📃',
+    'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+    'mp4': '🎥', 'avi': '🎥', 'mov': '🎥',
+    'mp3': '🎵', 'wav': '🎵',
+    'zip': '📦', 'rar': '📦',
+    'exe': '⚙️',
+    'default': '📄'
+  };
+  
+  return icons[extension] || icons['default'];
+}
+
+// 파일 다운로드 변수
+let currentDownloadFileId = null;
+let currentDownloadFile = null;
+
+// 파일 다운로드 (링크 지원 추가)
+function downloadFile(fileId) {
+  db.ref(`sharedFiles/${fileId}`).once('value', snapshot => {
+    const file = snapshot.val();
+    
+    if (file.password) {
+      currentDownloadFileId = fileId;
+      currentDownloadFile = file;
+      
+      const modal = document.getElementById("passwordModal");
+      const modalContent = modal.querySelector('.password-modal-content h3');
+      const modalText = modal.querySelector('.password-modal-content p');
+      
+      modalContent.textContent = file.method === 'link' ? '🔒 링크 열기' : '🔒 파일 다운로드';
+      modalText.textContent = file.method === 'link' ? '이 링크는 비밀번호가 필요합니다.' : '이 파일은 비밀번호가 필요합니다.';
+      
+      modal.style.display = "block";
+      modal.classList.add('show');
+      
+      window.originalCheckPassword = window.checkPassword;
+      window.checkPassword = checkFilePassword;
+      
+    } else {
+      executeFileDownload(file);
+    }
+  });
+}
+
+// 파일 비밀번호 확인
+function checkFilePassword() {
+  const inputPassword = document.getElementById("roomPasswordInput").value;
+  
+  if (inputPassword === currentDownloadFile.password) {
+    closePasswordModal();
+    executeFileDownload(currentDownloadFile);
+    
+    window.checkPassword = window.originalCheckPassword;
+    currentDownloadFileId = null;
+    currentDownloadFile = null;
+  } else {
+    alert("비밀번호가 틀렸습니다.");
+  }
+}
+
+// 실제 파일 다운로드/링크 열기 실행
+function executeFileDownload(file) {
+  if (file.method === 'link') {
+    // 링크 열기
+    window.open(file.linkUrl, '_blank');
+  } else {
+    // 파일 다운로드
+    const base64Data = file.base64Data.split(',')[1];
+    const binaryData = atob(base64Data);
+    const bytes = new Uint8Array(binaryData.length);
+    
+    for (let i = 0; i < binaryData.length; i++) {
+      bytes[i] = binaryData.charCodeAt(i);
+    }
+    
+    const blob = new Blob([bytes], { type: file.fileType });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+}
+
+// 파일 크기 포맷팅
+function formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 폼 초기화
+function resetFileForm() {
+  document.getElementById('fileInput').value = '';
+  document.getElementById('fileDescription').value = '';
+  document.getElementById('filePassword').checked = false;
+  document.getElementById('filePasswordInput').value = '';
+  document.getElementById('filePasswordInput').style.display = 'none';
+  
+  // 링크 모드 초기화
+  if (document.getElementById('linkInput')) {
+    document.getElementById('linkInput').value = '';
+  }
+  
+  document.getElementById('linkMode').checked = false;
+  toggleLinkMode();
+}
+
+// 비밀번호 체크박스 이벤트
+document.addEventListener('DOMContentLoaded', function() {
+  const filePasswordCheck = document.getElementById('filePassword');
+  if (filePasswordCheck) {
+    filePasswordCheck.addEventListener('change', function() {
+      const passwordInput = document.getElementById('filePasswordInput');
+      passwordInput.style.display = this.checked ? 'block' : 'none';
+    });
+  }
+});
+
+
   </script>
 
 
