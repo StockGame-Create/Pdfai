@@ -2458,7 +2458,7 @@ body.fullscreen .copyright-btn {
 <body>
 
   <h2>💬 Unvul Chat !!</h2>
-  <h4>(Made by Unvul ©) Ver. 7.42</h4>
+  <h4>(Made by 범서) Ver. 7.42 (pre release)</h4>
   
 
 
@@ -2699,12 +2699,12 @@ body.fullscreen .copyright-btn {
   <div class="tool-status">사용 가능</div>
 </div>
 
-      <div class="ez-tool-card disabled">
-        <div class="tool-icon">🎮</div>
-        <h4>Unvul Party !!</h4>
-        <p>Unvul의 다양한 게임을 즐겨보세요!</p>
-        <div class="tool-status">사용 가능</div>
-      </div>
+<div class="ez-tool-card" onclick="openUnvulParty()">
+  <div class="tool-icon">🎮</div>
+  <h4>Unvul-Party!!</h4>
+  <p>Unvul게임으로 친구들과 즐기세요</p>
+  <div class="tool-status">사용 가능</div>
+</div>
       
       <div class="ez-tool-card disabled">
         <div class="tool-icon">🌟</div>
@@ -3249,6 +3249,16 @@ function openUnvulChatBot() {
   if (confirm(warningMessage)) {
     // 사용자가 확인을 누르면 챗봇 사이트로 이동
     window.location.href = 'https://stockgame-create.github.io/UnvulChatbot/';
+  }
+  // 취소를 누르면 아무것도 하지 않음 (현재 페이지 유지)
+}
+
+function openUnvulParty() {
+  const warningMessage = `⚠️ 주의사항\n\n언벌 파티(으)로 이동합니다.\n\n현재 상태(이름, 커스터마이징 설정 등)가 저장되지 않습니다.\n\n계속하시겠습니까?`;
+  
+  if (confirm(warningMessage)) {
+    // 사용자가 확인을 누르면 챗봇 사이트로 이동
+    window.location.href = 'https://stockgame-create.github.io/Unvul-Party-RE/';
   }
   // 취소를 누르면 아무것도 하지 않음 (현재 페이지 유지)
 }
